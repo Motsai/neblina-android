@@ -1,4 +1,4 @@
-package com.motsai.nebctrlpanel;
+package com.motsai.neblina;
 
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
@@ -16,6 +16,7 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+
 
 /**
  * Created by hoanmotsai on 2016-06-10.

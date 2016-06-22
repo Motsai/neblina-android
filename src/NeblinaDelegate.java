@@ -1,4 +1,4 @@
-package com.motsai.nebctrlpanel;
+package com.motsai.neblina;
 
 import java.util.Objects;
 
