@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">NebCtrlPanel</string>
+    <string name="title_nebdevice_detail">NebDevice Detail</string>
+</resources>
