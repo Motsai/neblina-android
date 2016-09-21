@@ -6,38 +6,42 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context="com.motsai.nebctrlpanel.NeblinaDetailFragment">
+    tools:context="com.motsai.nebctrlpanel.NebDeviceDetailFragment"
+    android:weightSum="2">
 
 
-    <TableRow
+    <ListView
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="337dp"
+        android:id="@+id/listView"
+        android:scrollbars="vertical"
+        android:contextClickable="true"
+        android:nestedScrollingEnabled="true"
+        android:choiceMode="singleChoice"
+        android:fastScrollEnabled="false">
+<!--
+    <TableLayout
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_weight="0.11"
+        android:id="@+id/commandTable">
+    </TableLayout>
+        -->
+    </ListView>
 
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="New Button"
-            android:id="@+id/button" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="34dp"
-            android:text="New Text"
-            android:id="@+id/textView"
-            android:layout_column="0" />
-
-    </TableRow>
-
-    <TableRow
+    <TextView
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="Medium Text"
+        android:id="@+id/textView1" />
 
-        <TextureView
-            android:layout_width="wrap_content"
-            android:layout_height="213dp"
-            android:id="@+id/textureView"
-            android:layout_gravity="center_horizontal|bottom"
-            android:layout_column="0" />
-    </TableRow>
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="Medium Text"
+        android:id="@+id/textView2" />
+
 
 </LinearLayout>

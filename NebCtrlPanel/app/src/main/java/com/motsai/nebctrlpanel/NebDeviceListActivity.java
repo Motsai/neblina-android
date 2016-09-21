@@ -195,6 +195,7 @@ public class NebDeviceListActivity extends AppCompatActivity {
             holder.mView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+                    scanLeDevice(false);
                     //mBluetoothAdapter.stopLeScan(mLeScanCallback);
                     if (mTwoPane) {
                         Bundle arguments = new Bundle();

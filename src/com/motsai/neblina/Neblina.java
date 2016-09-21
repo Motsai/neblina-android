@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-
 /**
  * Created by hoanmotsai on 2016-06-10.
  */
@@ -220,28 +219,30 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
             errFlag = true;
         }
 
-        for (int i = 0; i < 16; i++)
+        int datalen = pkt.length - 4;
+
+        for (int i = 0; i < datalen; i++)
             data[i] = pkt[i+4];
 
 
         switch (subsys) {
             case NEB_CTRL_SUBSYS_DEBUG:		// Status & logging
-                mDelegate.didReceiveDebugData(pkt[3], data, errFlag);
+                mDelegate.didReceiveDebugData(pkt[3], data, datalen, errFlag);
                 break;
             case NEB_CTRL_SUBSYS_MOTION_ENG:// Motion Engine
                 mDelegate.didReceiveFusionData(pkt[3], data, errFlag);
                 break;
             case NEB_CTRL_SUBSYS_POWERMGMT:	// Power management
-                mDelegate.didReceivePmgntData(pkt[3], data, errFlag);
+                mDelegate.didReceivePmgntData(pkt[3], data, datalen, errFlag);
                 break;
             case NEB_CTRL_SUBSYS_LED:		// LED control
-                mDelegate.didReceiveLedData(pkt[3], data, errFlag);
+                mDelegate.didReceiveLedData(pkt[3], data, datalen, errFlag);
                 break;
             case NEB_CTRL_SUBSYS_STORAGE:	//NOR flash memory recorder
-                mDelegate.didReceiveStorageData(pkt[3], data, errFlag);
+                mDelegate.didReceiveStorageData(pkt[3], data, datalen, errFlag);
                 break;
             case NEB_CTRL_SUBSYS_EEPROM:	//small EEPROM storage
-                mDelegate.didReceiveEepromData(pkt[3], data, errFlag);
+                mDelegate.didReceiveEepromData(pkt[3], data, datalen, errFlag);
                 break;
         }
     }
