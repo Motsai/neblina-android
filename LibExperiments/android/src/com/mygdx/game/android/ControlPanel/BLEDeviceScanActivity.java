@@ -172,7 +172,7 @@ public class BLEDeviceScanActivity extends FragmentActivity implements AndroidFr
             finish(); //optional kill switch
         }
 
-        //For newer versions you need to get permission from the user to access location information
+        //For newer versions you need to get permission from the user to access location informationn
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
             if(this.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 final AlertDialog.Builder builder = new AlertDialog.Builder(this);
