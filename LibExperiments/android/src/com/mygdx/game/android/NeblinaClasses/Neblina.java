@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 
 /* Each instance of this class corresponds to a BLE device found in BLEDeviceScanActivity
@@ -429,9 +430,7 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
         Log.w("BLUETOOTH DEBUG", "Write Delay is: " + writeDelay);
         switch (initializeState){
             case 0:
-                streamQuaternion(true);
-
-//                setDataPort((byte)0,(byte)1);
+                getFirmwareVersion(); //TODO: Troubleshoot why this no longer return a value -> V2 issue???
                 initializeState++;
                 break;
             default:
@@ -440,31 +439,64 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
     }
 
 
+    //
     //Called when the writing of a characteristic returns an acknowledgement
     @Override
     public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status){
         switch (initializeState){
-            case 0:
-//                setDataPort((byte) 0, (byte) 1); //BLE port is 0, Activate is 1
-                initializeState++;
-                break;
+
             case 1:
+                try{
+                    TimeUnit.MILLISECONDS.sleep(250);
+                }
+                catch (InterruptedException e){
+                    Log.w("BLUETOOTH_DEBUG","Interrupted");
+                }
+
                 getMotionStatus();
                 initializeState++;
                 break;
             case 2:
+
+                try{
+                    TimeUnit.MILLISECONDS.sleep(250);
+                }
+                catch (InterruptedException e){
+                    Log.w("BLUETOOTH_DEBUG","Interrupted");
+                }
                 getLed();
                 initializeState++;
                 break;
             case 3:
+
+                try{
+                    TimeUnit.MILLISECONDS.sleep(250);
+                }
+                catch (InterruptedException e){
+                    Log.w("BLUETOOTH_DEBUG","Interrupted");
+                }
                 getDataPortState();
                 initializeState++;
                 break;
             case 4:
-                getFirmwareVersion(); //TODO: Troubleshoot why this no longer return a value -> V2 issue???
+
+                try{
+                    TimeUnit.MILLISECONDS.sleep(250);
+                }
+                catch (InterruptedException e){
+                    Log.w("BLUETOOTH_DEBUG","Interrupted");
+                }
+                streamQuaternion(true);
                 initializeState++;
                 break;
             case 5:
+
+                try{
+                    TimeUnit.MILLISECONDS.sleep(250);
+                }
+                catch (InterruptedException e){
+                    Log.w("BLUETOOTH_DEBUG","Interrupted");
+                }
                 streamIMU(true);
                 initializeState++;
                 break;
@@ -591,7 +623,7 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
         byte[] pkbuf = new byte[4];
 
         pkbuf[0] = ((NEB_CTRL_PKTYPE_CMD << 5) | NEB_CTRL_SUBSYS_DEBUG);
-        pkbuf[1] = 16;
+        pkbuf[1] = 0;
         pkbuf[2] = (byte)0xff;
         pkbuf[3] = DEBUG_CMD_GET_FW_VERSION;	// Cmd
 
@@ -1413,6 +1445,31 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
     //TODO: Make this code a bit cleaner for sanity's sake
     private byte calculateCRC8Java(byte[] pData, int len ) {
 
+        int i;
+        int e, f, crc;
+
+        crc = 0;
+        for (i = 0; i < len; i++)
+        {
+            e = (crc ^ pData[i]);
+            e = e % 256;
+            if (e<0)
+                e = e + 256;
+            f = (e ^ (e/16)) ^ (e/128);
+            f = f % 256;
+            if (f<0)
+                f = f + 256;
+            crc = 2*f ^ 16*f;
+            crc = crc % 256;
+            if (crc<0)
+                crc = crc + 256;
+        }
+        return (byte)crc;
+
+    }
+
+    private byte calculateCRC8Java2(byte[] pData, int len ) {
+
         int i, e, f, crc;
 
         crc = 0;
@@ -1467,6 +1524,7 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
         }
         return (byte)crc; //Doesn't matter if we add & 0xFF
     }
+
 
     //This is close to the original code copied from iOS -> it doesn't work properly
     private byte calculateCRC(byte[] pData, int len ) {

@@ -273,7 +273,7 @@ public class NebDeviceDetailFragment extends Fragment implements NeblinaDelegate
 
                     mNebDev.streamQuaternion(true);
                     try{
-                        TimeUnit.MILLISECONDS.sleep(100);
+                        TimeUnit.MILLISECONDS.sleep(250);
                     }
                     catch (InterruptedException e){
                         Log.w("BLUETOOTH_DEBUG","Interrupted");
@@ -283,7 +283,7 @@ public class NebDeviceDetailFragment extends Fragment implements NeblinaDelegate
                     mNebDev.streamIMU(true);
 
                     try{
-                        TimeUnit.MILLISECONDS.sleep(100);
+                        TimeUnit.MILLISECONDS.sleep(250);
                     }
                     catch (InterruptedException e){
                         Log.w("BLUETOOTH_DEBUG","Interrupted");
@@ -292,6 +292,14 @@ public class NebDeviceDetailFragment extends Fragment implements NeblinaDelegate
 
                 }else{
                     mNebDev.streamDisableAll();
+
+                    try{
+                        TimeUnit.MILLISECONDS.sleep(250);
+                    }
+                    catch (InterruptedException e){
+                        Log.w("BLUETOOTH_DEBUG","Interrupted");
+                    }
+
                     mNebDev.sessionRecord(false);
                 }
 
