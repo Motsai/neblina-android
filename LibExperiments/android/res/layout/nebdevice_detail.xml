@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/neblina_detail"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="com.motsai.nebctrlpanel.NebDeviceDetailFragment"
+    android:weightSum="2">
+
+
+    <ListView
+        android:layout_width="match_parent"
+        android:layout_height="337dp"
+        android:id="@+id/listView"
+        android:scrollbars="vertical"
+        android:contextClickable="true"
+        android:nestedScrollingEnabled="true"
+        android:choiceMode="singleChoice"
+        android:fastScrollEnabled="false">
+<!--
+    <TableLayout
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_weight="0.11"
+        android:id="@+id/commandTable">
+    </TableLayout>
+        -->
+    </ListView>
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:text="Q1"
+            android:id="@+id/textView1"
+            android:layout_weight="1"
+            android:layout_height="22dp" />
+
+        <TextView
+            android:text="Q2"
+            android:layout_width="wrap_content"
+            android:layout_height="22dp"
+            android:id="@+id/textView2"
+            android:layout_weight="1"
+            android:textAppearance="@android:style/TextAppearance.Medium" />
+
+        <TextView
+            android:text="Q3"
+            android:layout_width="wrap_content"
+            android:layout_height="22dp"
+            android:id="@+id/textView3"
+            android:layout_weight="1"
+            android:textAppearance="@android:style/TextAppearance.Medium" />
+
+        <TextView
+            android:text="Q4"
+            android:layout_width="wrap_content"
+            android:layout_height="22dp"
+            android:id="@+id/textView4"
+            android:layout_weight="1"
+            android:textAppearance="@android:style/TextAppearance.Medium" />
+
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="Version Number"
+        android:id="@+id/versionText" />
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:text="Cloud Stream  "
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/cloudStream"
+            android:textAppearance="@android:style/TextAppearance.Medium"
+            android:layout_centerVertical="true"
+            android:layout_alignParentStart="true"
+            android:layout_marginLeft="30dp" />
+
+        <ToggleButton
+            android:text="CloudToggle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/cloudStreamToggle"
+            android:layout_centerVertical="true"
+            android:layout_toEndOf="@+id/cloudStream" />
+
+        <Button
+            android:text="Button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/dataVisualisation"
+            android:layout_alignBottom="@+id/cloudStreamToggle"
+            android:layout_toEndOf="@+id/textView5" />
+
+        <TextView
+            android:text="Visualize Data  "
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/textView5"
+            android:textAppearance="@android:style/TextAppearance.Medium"
+            android:layout_centerVertical="true"
+            android:layout_toEndOf="@+id/cloudStreamToggle"
+            android:layout_marginLeft="30dp" />
+
+    </RelativeLayout>
+
+
+</LinearLayout>
