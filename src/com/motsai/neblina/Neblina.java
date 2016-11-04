@@ -129,6 +129,23 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
         mDelegate = neblinaDelegate;
     }
 
+    public byte crc8(byte data[], int Len) {
+        int i = 0;
+        int e = 0;
+        int f = 0;
+        int crc = 0;
+
+        //for (i = 0; i < Len; i += 1)
+        while (i < Len) {
+            e = crc ^ data[i];
+            f = e ^ (e >> 4) ^ (e >> 7);
+            crc = ((f << 1) ^ (f << 4)) & 0xff;
+            i += 1;
+        }
+
+        return (byte)crc;
+    }
+
     @Override
     public String toString() {
         return Nebdev.getName() + "_" + Long.toHexString(DevId).toUpperCase();
@@ -258,9 +275,10 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
 
         pkbuf[0] = ((NEB_CTRL_PKTYPE_CMD << 5) | NEB_CTRL_SUBSYS_DEBUG); // 0x40
         pkbuf[1] = 0;	// Data len
-        pkbuf[2] = 0;
+        pkbuf[2] = (byte)0xFF;
         pkbuf[3] = DEBUG_CMD_GET_DATAPORT;	// Cmd
 
+        pkbuf[2] = crc8(pkbuf, pkbuf.length);
         mCtrlChar.setValue(pkbuf); //writeValue(NSData(bytes: UnsafeMutablePointer<Void>(pkbuf), length: 4), forCharacteristic: ctrlChar, type: CBCharacteristicWriteType.WithoutResponse)
         mBleGatt.writeCharacteristic(mCtrlChar);
     }
@@ -273,10 +291,11 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
         byte[] pkbuf = new byte[4];
 
         pkbuf[0] = ((NEB_CTRL_PKTYPE_CMD << 5) | NEB_CTRL_SUBSYS_DEBUG);
-        pkbuf[1] = 16;
-        pkbuf[2] = 0;
+        pkbuf[1] = 0;
+        pkbuf[2] = (byte)0xFF;
         pkbuf[3] = DEBUG_CMD_GET_FW_VERSION;	// Cmd
 
+        pkbuf[2] = crc8(pkbuf, pkbuf.length);
         mCtrlChar.setValue(pkbuf);//device.writeValue(NSData(bytes: UnsafeMutablePointer<Void>(pkbuf), length: 4), forCharacteristic: ctrlChar, type: CBCharacteristicWriteType.WithoutResponse)
         mBleGatt.writeCharacteristic(mCtrlChar);
     }
@@ -286,14 +305,15 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
             return;
         }
 
-        byte[] pkbuf = new byte[20];
+        byte[] pkbuf = new byte[4];
 
         pkbuf[0] = ((NEB_CTRL_PKTYPE_CMD << 5) | NEB_CTRL_SUBSYS_DEBUG);
-        pkbuf[1] = 16;
-        pkbuf[2] = 0;
+        pkbuf[1] = 0;
+        pkbuf[2] = (byte)0xFF;
         pkbuf[3] = DEBUG_CMD_MOTENGINE_RECORDER_STATUS;	// Cmd
 
         //device.writeValue(NSData(bytes: UnsafeMutablePointer<Void>(pkbuf), length: 20), forCharacteristic: ctrlChar, type: CBCharacteristicWriteType.WithoutResponse)
+        pkbuf[2] = crc8(pkbuf, pkbuf.length);
         mCtrlChar.setValue(pkbuf);
         mBleGatt.writeCharacteristic(mCtrlChar);
     }
@@ -303,13 +323,14 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
             return;
         }
 
-        byte[] pkbuf = new byte[20];
+        byte[] pkbuf = new byte[4];
 
         pkbuf[0] = ((NEB_CTRL_PKTYPE_CMD << 5) | NEB_CTRL_SUBSYS_DEBUG);
-        pkbuf[1] = 16;
-        pkbuf[2] = 0;
+        pkbuf[1] = 0;
+        pkbuf[2] = (byte)0xFF;
         pkbuf[3] = DEBUG_CMD_MOTENGINE_RECORDER_STATUS;	// Cmd
 
+        pkbuf[2] = crc8(pkbuf, pkbuf.length);
         mCtrlChar.setValue(pkbuf);
         mBleGatt.writeCharacteristic(mCtrlChar);
         //device.writeValue(NSData(bytes: UnsafeMutablePointer<Void>(pkbuf), length: 20), forCharacteristic: ctrlChar, type: CBCharacteristicWriteType.WithoutResponse)
@@ -324,7 +345,7 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
 
         pkbuf[0] = ((NEB_CTRL_PKTYPE_CMD << 5) | NEB_CTRL_SUBSYS_DEBUG); // 0x40
         pkbuf[1] = 2;
-        pkbuf[2] = 0;
+        pkbuf[2] = (byte)0xFF;
         pkbuf[3] = DEBUG_CMD_SET_DATAPORT;	// Cmd
 
         // Port = 0 : BLE
@@ -332,6 +353,7 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
         pkbuf[4] = (byte)PortIdx;
         pkbuf[5] = Ctrl;		// 1 - Open, 0 - Close
 
+        pkbuf[2] = crc8(pkbuf, pkbuf.length);
         mCtrlChar.setValue(pkbuf);
         mBleGatt.writeCharacteristic(mCtrlChar);
         //device.writeValue(NSData(bytes: UnsafeMutablePointer<Void>(pkbuf), length: 6), forCharacteristic: ctrlChar, type: CBCharacteristicWriteType.WithoutResponse)
@@ -342,11 +364,11 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
             return;
         }
 
-        byte[] pkbuf = new byte[20];
+        byte[] pkbuf = new byte[9];
 
         pkbuf[0] = ((NEB_CTRL_PKTYPE_CMD << 5) | NEB_CTRL_SUBSYS_DEBUG); // 0x40
-        pkbuf[1] = 16;
-        pkbuf[2] = 0;
+        pkbuf[1] = 5;
+        pkbuf[2] = (byte)0xFF;
         pkbuf[3] = DEBUG_CMD_SET_INTERFACE;	// Cmd
 
         // Interf = 0 : BLE
@@ -354,6 +376,7 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
         pkbuf[4] = Interf;
         pkbuf[8] = 0;
 
+        pkbuf[2] = crc8(pkbuf, pkbuf.length);
         mCtrlChar.setValue(pkbuf);
         mBleGatt.writeCharacteristic(mCtrlChar);
         //device.writeValue(NSData(bytes: UnsafeMutablePointer<Void>(pkbuf), length: 20), forCharacteristic: ctrlChar, type: CBCharacteristicWriteType.WithoutResponse)
@@ -365,16 +388,17 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
             return;
         }
 
-        byte[] pkbuf = new byte[20];
+        byte[] pkbuf = new byte[6];
 
         pkbuf[0] = ((NEB_CTRL_PKTYPE_CMD << 5) | NEB_CTRL_SUBSYS_EEPROM);
-        pkbuf[1] = 16;
-        pkbuf[2] = 0;
+        pkbuf[1] = 6;
+        pkbuf[2] = (byte)0xFF;
         pkbuf[3] = EEPROM_CMD_READ; // Cmd
 
         pkbuf[4] = (byte)(pageNo & 0xff);
         pkbuf[5] = (byte)((pageNo >> 8) & 0xff);
 
+        pkbuf[2] = crc8(pkbuf, pkbuf.length);
         mCtrlChar.setValue(pkbuf);
         mBleGatt.writeCharacteristic(mCtrlChar);
         //device.writeValue(NSData(bytes: UnsafeMutablePointer<Void>(pkbuf), length: 20), forCharacteristic: ctrlChar, type: CBCharacteristicWriteType.WithoutResponse)
@@ -389,7 +413,7 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
 
         pkbuf[0] = ((NEB_CTRL_PKTYPE_CMD << 5) | NEB_CTRL_SUBSYS_EEPROM);
         pkbuf[1] = 16;
-        pkbuf[2] = 0;
+        pkbuf[2] = (byte)0xff;
         pkbuf[3] = EEPROM_CMD_WRITE; // Cmd
 
         pkbuf[4] = (byte)(pageNo & 0xff);
@@ -399,6 +423,7 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
             pkbuf[i + 6] = data[i];
         }
 
+        pkbuf[2] = crc8(pkbuf, pkbuf.length);
         mCtrlChar.setValue(pkbuf);
         mBleGatt.writeCharacteristic(mCtrlChar);
         //device.writeValue(NSData(bytes: UnsafeMutablePointer<Void>(pkbuf), length: 20), forCharacteristic: ctrlChar, type: CBCharacteristicWriteType.WithoutResponse)
@@ -414,9 +439,10 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
 
         pkbuf[0] = ((NEB_CTRL_PKTYPE_CMD << 5) | NEB_CTRL_SUBSYS_LED);
         pkbuf[1] = 0;	// Data length
-        pkbuf[2] = 0;
+        pkbuf[2] = (byte)0xff;
         pkbuf[3] = LED_CMD_GET_VALUE;	// Cmd
 
+        pkbuf[2] = crc8(pkbuf, pkbuf.length);
         mCtrlChar.setValue(pkbuf);
         mBleGatt.writeCharacteristic(mCtrlChar);
         //device.writeValue(NSData(bytes: UnsafeMutablePointer<Void>(pkbuf), length: 4), forCharacteristic: ctrlChar, type: CBCharacteristicWriteType.WithoutResponse)
@@ -431,7 +457,7 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
 
         pkbuf[0] = ((NEB_CTRL_PKTYPE_CMD << 5) | NEB_CTRL_SUBSYS_LED);
         pkbuf[1] = 16;
-        pkbuf[2] = 0;
+        pkbuf[2] = (byte)0xff;
         pkbuf[3] = LED_CMD_SET_VALUE;	// Cmd
 
         // Nb of LED to set
@@ -439,6 +465,7 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
         pkbuf[5] = LedNo;
         pkbuf[6] = Value;
 
+        pkbuf[2] = crc8(pkbuf, pkbuf.length);
         mCtrlChar.setValue(pkbuf);
         mBleGatt.writeCharacteristic(mCtrlChar);
         //device.writeValue(NSData(bytes: UnsafeMutablePointer<Void>(pkbuf), length: 20), forCharacteristic: ctrlChar, type: CBCharacteristicWriteType.WithoutResponse)
@@ -454,9 +481,10 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
 
         pkbuf[0] = ((NEB_CTRL_PKTYPE_CMD << 5) | NEB_CTRL_SUBSYS_POWERMGMT);
         pkbuf[1] = 0;	// Data length
-        pkbuf[2] = 0;
+        pkbuf[2] = (byte)0xff;
         pkbuf[3] = POWERMGMT_CMD_GET_TEMPERATURE;	// Cmd
 
+        pkbuf[2] = crc8(pkbuf, pkbuf.length);
         mCtrlChar.setValue(pkbuf);
         mBleGatt.writeCharacteristic(mCtrlChar);
         //device.writeValue(NSData(bytes: UnsafeMutablePointer<Void>(pkbuf), length: 4), forCharacteristic: ctrlChar, type: CBCharacteristicWriteType.WithoutResponse)
@@ -471,13 +499,14 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
 
         pkbuf[0] = ((NEB_CTRL_PKTYPE_CMD << 5) | NEB_CTRL_SUBSYS_POWERMGMT);
         pkbuf[1] = 2;	// Data length
-        pkbuf[2] = 0;
+        pkbuf[2] = (byte)0xff;
         pkbuf[3] = POWERMGMT_CMD_SET_CHARGE_CURRENT;	// Cmd
 
         // Data
         pkbuf[4] = (byte)(Current & 0xFF);
         pkbuf[5] = (byte)((Current >> 8) & 0xFF);
 
+        pkbuf[2] = crc8(pkbuf, pkbuf.length);
         mCtrlChar.setValue(pkbuf);
         mBleGatt.writeCharacteristic(mCtrlChar);
         //device.writeValue(NSData(bytes: UnsafeMutablePointer<Void>(pkbuf), length: 6), forCharacteristic: ctrlChar, type: CBCharacteristicWriteType.WithoutResponse)
@@ -493,10 +522,11 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
 
         pkbuf[0] = ((NEB_CTRL_PKTYPE_CMD << 5) | NEB_CTRL_SUBSYS_MOTION_ENG); //0x41
         pkbuf[1] = 16;//UInt8(sizeof(Fusion_DataPacket_t))
-        pkbuf[2] = 0;
+        pkbuf[2] = (byte)0xff;
         pkbuf[3] = MOTION_CMD_SET_ACC_RANGE;	// Cmd
         pkbuf[8] = Mode;
 
+        pkbuf[2] = crc8(pkbuf, pkbuf.length);
         mCtrlChar.setValue(pkbuf);
         mBleGatt.writeCharacteristic(mCtrlChar);
 //device.writeValue(NSData(bytes: UnsafeMutablePointer<Void>(pkbuf), length: 20), forCharacteristic: ctrlChar, type: CBCharacteristicWriteType.WithoutResponse)
@@ -511,12 +541,13 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
 
         pkbuf[0] = ((NEB_CTRL_PKTYPE_CMD << 5) | NEB_CTRL_SUBSYS_MOTION_ENG); //0x41
         pkbuf[1] = 16;//UInt8(sizeof(Fusion_DataPacket_t))
-        pkbuf[2] = 0;
+        pkbuf[2] = (byte)0xff;
         pkbuf[3] = MOTION_CMD_SET_FUSION_TYPE;	// Cmd
 
         // Data
         pkbuf[8] = Mode;
 
+        pkbuf[2] = crc8(pkbuf, pkbuf.length);
         mCtrlChar.setValue(pkbuf);
         mBleGatt.writeCharacteristic(mCtrlChar);
 //device.writeValue(NSData(bytes: UnsafeMutablePointer<Void>(pkbuf), length: 20), forCharacteristic: ctrlChar, type: CBCharacteristicWriteType.WithoutResponse)
@@ -531,9 +562,10 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
 
         pkbuf[0] = ((NEB_CTRL_PKTYPE_CMD << 5) | NEB_CTRL_SUBSYS_MOTION_ENG); //0x41
         pkbuf[1] = 16;//UInt8(sizeof(Fusion_DataPacket_t))
-        pkbuf[2] = 0;
+        pkbuf[2] = (byte)0xff;
         pkbuf[3] = MOTION_CMD_LOCK_HEADING_REF;	// Cmd
 
+        pkbuf[2] = crc8(pkbuf, pkbuf.length);
         mCtrlChar.setValue(pkbuf);
         mBleGatt.writeCharacteristic(mCtrlChar);
     //device.writeValue(NSData(bytes: UnsafeMutablePointer<Void>(pkbuf), length: 20), forCharacteristic: ctrlChar, type: CBCharacteristicWriteType.WithoutResponse)
@@ -550,9 +582,10 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
 
         pkbuf[0] = ((NEB_CTRL_PKTYPE_CMD << 5) | NEB_CTRL_SUBSYS_MOTION_ENG);
         pkbuf[1] = 16;//UInt8(sizeof(Fusion_DataPacket_t))
-        pkbuf[2] = 0;
+        pkbuf[2] = (byte)0xff;
         pkbuf[3] = MOTION_CMD_DISABLE_ALL_STREAM;	// Cmd
 
+        pkbuf[2] = crc8(pkbuf, pkbuf.length);
         mCtrlChar.setValue(pkbuf);
         mBleGatt.writeCharacteristic(mCtrlChar);
 //device.writeValue(NSData(bytes: UnsafeMutablePointer<Void>(pkbuf), length: 20), forCharacteristic: ctrlChar, type: CBCharacteristicWriteType.WithoutResponse)
@@ -568,7 +601,7 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
 
         pkbuf[0] = ((NEB_CTRL_PKTYPE_CMD << 5) | NEB_CTRL_SUBSYS_MOTION_ENG); //0x41
         pkbuf[1] = 16;//UInt8(sizeof(Fusion_DataPacket_t))
-        pkbuf[2] = 0;
+        pkbuf[2] = (byte)0xff;
         pkbuf[3] = MOTION_CMD_EULER_ANGLE; // Cmd
 
         if (Enable == true)
@@ -580,6 +613,7 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
             pkbuf[8] = 0;
         }
 
+        pkbuf[2] = crc8(pkbuf, pkbuf.length);
         mCtrlChar.setValue(pkbuf);
         mBleGatt.writeCharacteristic(mCtrlChar);
 //device.writeValue(NSData(bytes: UnsafeMutablePointer<Void>(pkbuf), length: 20), forCharacteristic: ctrlChar, type: CBCharacteristicWriteType.WithoutResponse)
@@ -595,7 +629,7 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
 
         pkbuf[0] = ((NEB_CTRL_PKTYPE_CMD << 5) | NEB_CTRL_SUBSYS_MOTION_ENG); //0x41
         pkbuf[1] = 16;//UInt8(sizeof(Fusion_DataPacket_t))
-        pkbuf[2] = 0;
+        pkbuf[2] = (byte)0xff;
         pkbuf[3] = MOTION_CMD_EXTFORCE;	// Cmd
 
         if (Enable == true)
@@ -606,6 +640,8 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
         {
             pkbuf[8] = 0;
         }
+
+        pkbuf[2] = crc8(pkbuf, pkbuf.length);
         mCtrlChar.setValue(pkbuf);
         mBleGatt.writeCharacteristic(mCtrlChar);
 
@@ -622,7 +658,7 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
 
         pkbuf[0] = ((NEB_CTRL_PKTYPE_CMD << 5) | NEB_CTRL_SUBSYS_MOTION_ENG); //0x41
         pkbuf[1] = 16;//(sizeof(Fusion_DataPacket_t))
-        pkbuf[2] = 0;
+        pkbuf[2] = (byte)0xff;
         pkbuf[3] = MOTION_CMD_IMU_DATA;	// Cmd
 
         if (Enable == true)
@@ -633,6 +669,8 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
         {
             pkbuf[8] = 0;
         }
+
+        pkbuf[2] = crc8(pkbuf, pkbuf.length);
         mCtrlChar.setValue(pkbuf);
         mBleGatt.writeCharacteristic(mCtrlChar);
 
@@ -649,7 +687,7 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
 
         pkbuf[0] = ((NEB_CTRL_PKTYPE_CMD << 5) | NEB_CTRL_SUBSYS_MOTION_ENG); //0x41
         pkbuf[1] = 16;//UInt8(sizeof(Fusion_DataPacket_t))
-        pkbuf[2] = 0;
+        pkbuf[2] = (byte)0xff;
         pkbuf[3] = MOTION_CMD_MAG_DATA;	// Cmd
 
         if (Enable == true)
@@ -660,6 +698,8 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
         {
             pkbuf[8] = 0;
         }
+
+        pkbuf[2] = crc8(pkbuf, pkbuf.length);
         mCtrlChar.setValue(pkbuf);
         mBleGatt.writeCharacteristic(mCtrlChar);
 
@@ -676,7 +716,7 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
 
         pkbuf[0] = ((NEB_CTRL_PKTYPE_CMD << 5) | NEB_CTRL_SUBSYS_MOTION_ENG); //0x41
         pkbuf[1] = 16; //UInt8(sizeof(Fusion_DataPacket_t))
-        pkbuf[2] = 0;
+        pkbuf[2] = (byte)0xff;
         pkbuf[3] = MOTION_CMD_MOTION_STATE;	// Cmd
 
         if (Enable == true)
@@ -687,6 +727,8 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
         {
             pkbuf[8] = 0;
         }
+
+        pkbuf[2] = crc8(pkbuf, pkbuf.length);
         mCtrlChar.setValue(pkbuf);
         mBleGatt.writeCharacteristic(mCtrlChar);
 
@@ -703,7 +745,7 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
 
         pkbuf[0] = ((NEB_CTRL_PKTYPE_CMD << 5) | NEB_CTRL_SUBSYS_MOTION_ENG); //0x41
         pkbuf[1] = 16;//UInt8(sizeof(Fusion_DataPacket_t))
-        pkbuf[2] = 0;
+        pkbuf[2] = (byte)0xff;
         pkbuf[3] = MOTION_CMD_PEDOMETER; // Cmd
 
         if (Enable == true)
@@ -714,6 +756,8 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
         {
             pkbuf[8] = 0;
         }
+
+        pkbuf[2] = crc8(pkbuf, pkbuf.length);
         mCtrlChar.setValue(pkbuf);
         mBleGatt.writeCharacteristic(mCtrlChar);
 
@@ -730,7 +774,7 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
 
         pkbuf[0] = ((NEB_CTRL_PKTYPE_CMD << 5) | NEB_CTRL_SUBSYS_MOTION_ENG); //0x41
         pkbuf[1] = 16;//UInt8(sizeof(Fusion_DataPacket_t))
-        pkbuf[2] = 0;
+        pkbuf[2] = (byte)0xff;
         pkbuf[3] = MOTION_CMD_QUATERNION;	// Cmd
 
         if (Enable == true)
@@ -741,6 +785,8 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
         {
             pkbuf[8] = 0;
         }
+
+        pkbuf[2] = crc8(pkbuf, pkbuf.length);
         mCtrlChar.setValue(pkbuf);
         mBleGatt.writeCharacteristic(mCtrlChar);
 
@@ -756,7 +802,7 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
 
         pkbuf[0] = ((NEB_CTRL_PKTYPE_CMD << 5) | NEB_CTRL_SUBSYS_MOTION_ENG); //0x41
         pkbuf[1] = 16;//UInt8(sizeof(Fusion_DataPacket_t))
-        pkbuf[2] = 0;
+        pkbuf[2] = (byte)0xff;
         pkbuf[3] = MOTION_CMD_ROTATION_INFO;	// Cmd
 
         if (Enable == true)
@@ -767,6 +813,8 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
         {
             pkbuf[8] = 0;
         }
+
+        pkbuf[2] = crc8(pkbuf, pkbuf.length);
         mCtrlChar.setValue(pkbuf);
         mBleGatt.writeCharacteristic(mCtrlChar);
 
@@ -782,7 +830,7 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
 
         pkbuf[0] = ((NEB_CTRL_PKTYPE_CMD << 5) | NEB_CTRL_SUBSYS_MOTION_ENG); //0x41
         pkbuf[1] = 16;//UInt8(sizeof(Fusion_DataPacket_t));
-        pkbuf[2] = 0;
+        pkbuf[2] = (byte)0xff;
         pkbuf[3] = MOTION_CMD_SIT_STAND;	// Cmd
 
         if (Enable == true)
@@ -793,6 +841,8 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
         {
             pkbuf[8] = 0;
         }
+
+        pkbuf[2] = crc8(pkbuf, pkbuf.length);
         mCtrlChar.setValue(pkbuf);
         mBleGatt.writeCharacteristic(mCtrlChar);
 
@@ -809,7 +859,7 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
 
         pkbuf[0] = ((NEB_CTRL_PKTYPE_CMD << 5) | NEB_CTRL_SUBSYS_MOTION_ENG); //0x41
         pkbuf[1] = 16;//UInt8(sizeof(Fusion_DataPacket_t))
-        pkbuf[2] = 0;
+        pkbuf[2] = (byte)0xff;
         pkbuf[3] = MOTION_CMD_TRAJECTORY_INFO;	// Cmd
 
         if (Enable == true)
@@ -820,6 +870,8 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
         {
             pkbuf[8] = 0;
         }
+
+        pkbuf[2] = crc8(pkbuf, pkbuf.length);
         mCtrlChar.setValue(pkbuf);
         mBleGatt.writeCharacteristic(mCtrlChar);
 
@@ -836,9 +888,10 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
 
         pkbuf[0] = ((NEB_CTRL_PKTYPE_CMD << 5) | NEB_CTRL_SUBSYS_MOTION_ENG);
         pkbuf[1] = 16; //UInt8(sizeof(Fusion_DataPacket_t))
-        pkbuf[2] = 0;
+        pkbuf[2] = (byte)0xff;
         pkbuf[3] = MOTION_CMD_RESET_TIMESTAMP;	// Cmd
 
+        pkbuf[2] = crc8(pkbuf, pkbuf.length);
         mCtrlChar.setValue(pkbuf);
         mBleGatt.writeCharacteristic(mCtrlChar);
 
@@ -855,7 +908,7 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
 
         pkbuf[0] = ((NEB_CTRL_PKTYPE_CMD << 5) | NEB_CTRL_SUBSYS_MOTION_ENG); //0x41
         pkbuf[1] = 16;//UInt8(sizeof(Fusion_DataPacket_t))
-        pkbuf[2] = 0;
+        pkbuf[2] = (byte)0xff;
         pkbuf[3] = MOTION_CMD_TRAJECTORY_RECORD;	// Cmd
 
         if (Enable == true)
@@ -866,6 +919,8 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
         {
             pkbuf[8] = 0;
         }
+
+        pkbuf[2] = crc8(pkbuf, pkbuf.length);
         mCtrlChar.setValue(pkbuf);
         mBleGatt.writeCharacteristic(mCtrlChar);
 
@@ -878,13 +933,14 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
             return;
         }
 
-        byte[] pkbuf = new byte[20];
+        byte[] pkbuf = new byte[4];
 
         pkbuf[0] = ((NEB_CTRL_PKTYPE_CMD << 5) | NEB_CTRL_SUBSYS_STORAGE);
-        pkbuf[1] = 16;
-        pkbuf[2] = 0;
+        pkbuf[1] = 0;
+        pkbuf[2] = (byte)0xff;
         pkbuf[3] = STORAGE_CMD_GET_NB_SESSION; // Cmd
 
+        pkbuf[2] = crc8(pkbuf, pkbuf.length);
         mCtrlChar.setValue(pkbuf);
         mBleGatt.writeCharacteristic(mCtrlChar);
 
@@ -896,16 +952,17 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
             return;
         }
 
-        byte[] pkbuf = new byte[20];
+        byte[] pkbuf = new byte[10];
 
         pkbuf[0] = ((NEB_CTRL_PKTYPE_CMD << 5) | NEB_CTRL_SUBSYS_STORAGE);
-        pkbuf[1] = 16;
-        pkbuf[2] = 0;
+        pkbuf[1] = 6;
+        pkbuf[2] = (byte)0xff;
         pkbuf[3] = STORAGE_CMD_GET_SESSION_INFO; // Cmd
 
         pkbuf[8] = (byte)(sessionId & 0xff);
         pkbuf[9] = (byte)((sessionId >> 8) & 0xff);
 
+        pkbuf[2] = crc8(pkbuf, pkbuf.length);
         mCtrlChar.setValue(pkbuf);
         mBleGatt.writeCharacteristic(mCtrlChar);
 
@@ -917,11 +974,11 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
             return;
         }
 
-        byte[] pkbuf = new byte[20];
+        byte[] pkbuf = new byte[9];
 
         pkbuf[0] = ((NEB_CTRL_PKTYPE_CMD << 5) | NEB_CTRL_SUBSYS_STORAGE); //0x41
-        pkbuf[1] = 16;
-        pkbuf[2] = 0;
+        pkbuf[1] = 5;
+        pkbuf[2] = (byte)0xff;
         pkbuf[3] = STORAGE_CMD_ERASE; // Cmd
 
         if (Enable == true)
@@ -932,6 +989,8 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
         {
             pkbuf[8] = 0;
         }
+
+        pkbuf[2] = crc8(pkbuf, pkbuf.length);
         mCtrlChar.setValue(pkbuf);
         mBleGatt.writeCharacteristic(mCtrlChar);
 
@@ -944,11 +1003,11 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
             return;
         }
 
-        byte[] pkbuf = new byte[20];
+        byte[] pkbuf = new byte[11];
 
         pkbuf[0] = ((NEB_CTRL_PKTYPE_CMD << 5) | NEB_CTRL_SUBSYS_STORAGE);
-        pkbuf[1] = 16;
-        pkbuf[2] = 0;
+        pkbuf[1] = 7;
+        pkbuf[2] = (byte)0xff;
         pkbuf[3] = STORAGE_CMD_PLAY; // Cmd
 
         if (Enable == true)
@@ -963,6 +1022,7 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
         pkbuf[9] = (byte)(sessionId & 0xff);
         pkbuf[10] = (byte)((sessionId >> 8) & 0xff);
 
+        pkbuf[2] = crc8(pkbuf, pkbuf.length);
         mCtrlChar.setValue(pkbuf);
         mBleGatt.writeCharacteristic(mCtrlChar);
 
@@ -974,11 +1034,11 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
             return;
         }
 
-        byte[] pkbuf = new byte[20];
+        byte[] pkbuf = new byte[9];
 
         pkbuf[0] = ((NEB_CTRL_PKTYPE_CMD << 5) | NEB_CTRL_SUBSYS_STORAGE); //0x41
-        pkbuf[1] = 16;
-        pkbuf[2] = 0;
+        pkbuf[1] = 5;
+        pkbuf[2] = (byte)0xff;
         pkbuf[3] = STORAGE_CMD_RECORD;	// Cmd
 
         if (Enable == true)
@@ -989,6 +1049,8 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
         {
             pkbuf[8] = 0;
         }
+
+        pkbuf[2] = crc8(pkbuf, pkbuf.length);
         mCtrlChar.setValue(pkbuf);
         mBleGatt.writeCharacteristic(mCtrlChar);
 
