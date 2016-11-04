@@ -2,8 +2,15 @@
 This is an enhanced version of the Neblina Control Panel that works with V1 and V2 Neblina boards.
 It allows users to connect to up to 8 Neblina devices and write various control aspects. This version
 presents a Space Invaders visualization that you can use to verify connectivity to the gyroscope.
+It syncs the motions of the spaceship to the motions of an active Neblina device.
+
+(/docPics/Control Panel.png)
+
 There is a second visualization that allows you to observe in real-time the accelerometer output.
 This document will walk you through installing, running, and using the Neblina Control Panel V2.
+
+(/docPics/Live Graphs.png)
+
 
 # Pre-requisites
 
