@@ -138,7 +138,7 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
     private int connectedDevNum;
 
     //Periodic RSSI poll variables
-    private boolean shouldPollRSSI = true;
+    private boolean shouldPollRSSI = false;
     private long RETRY_TIME = 1000;
     private long START_TIME = 1000;
 
@@ -418,6 +418,8 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
                 //Used for Jitter Tests
 //                myTimer.scheduleAtFixedRate(new JitterTest(),START_TIME+250,20);
             }
+        }else{
+            Log.w("BLUETOOTH_DEBUG", "FAILED TO DISCOVER SERVICES :(");
         }
     }
 

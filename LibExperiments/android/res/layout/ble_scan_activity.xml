@@ -14,24 +14,17 @@
 
     <!--android:background="@drawable/bg_gradient"-->
 
+
     <TextView
-        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="Available BLE Commands"
-        android:id="@+id/Available_BLE_Commands"
+        android:text="Available BluetoothLE Devices"
+        android:id="@+id/textView"
+        android:layout_marginRight="50dp"
+        android:linksClickable="false"
         android:layout_alignParentTop="true"
-        android:layout_toEndOf="@+id/textView"
-        android:layout_above="@+id/button_list_fragment"
-        android:layout_alignStart="@+id/button_list_fragment" />
-
-    <fragment
-        android:name="com.mygdx.game.android.ControlPanel.BLEDeviceScanActivity$GameFragment"
-        android:id="@+id/fragment3"
-        android:layout_width="wrap_content"
-        android:layout_alignParentEnd="true"
         android:layout_alignParentStart="true"
-        android:layout_alignParentBottom="true" />
+        android:layout_width="300dp" />
 
     <Button
         android:layout_width="match_parent"
@@ -44,35 +37,34 @@
         android:layout_alignEnd="@+id/textView"
         android:layout_alignParentStart="true" />
 
-    <fragment
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:name="com.mygdx.game.android.NeblinaClasses.NebDeviceDetailFragment"
-        android:id="@+id/button_list_fragment"
-        android:layout_alignParentEnd="true"
-        android:layout_below="@+id/textView"
-        android:layout_above="@+id/fragment3"
-        android:layout_toEndOf="@+id/refreshButton"
-        android:layout_alignEnd="@+id/textView" />
-
     <ListView
-        android:layout_width="250dp"
         android:layout_height="wrap_content"
         android:id="@android:id/list"
         android:layout_above="@+id/refreshButton"
         android:layout_alignParentStart="true"
         android:layout_below="@+id/textView"
-        android:layout_toStartOf="@+id/Available_BLE_Commands" />
+        android:layout_width="300dp" />
+        <!--android:layout_toStartOf="@+id/Available_BLE_Commands" />-->
 
-    <TextView
-        android:layout_width="200dp"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="Available BluetoothLE Devices"
-        android:id="@+id/textView"
-        android:layout_marginRight="50dp"
-        android:linksClickable="false"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentStart="true" />
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentEnd="true"
+        android:layout_toEndOf="@+id/refreshButton"
+        android:layout_above="@+id/fragment3"
+        >
+        <include layout="@layout/nebdevice_list" />
+    </FrameLayout>
+
+    <fragment
+        android:name="com.mygdx.game.android.ControlPanel.BLEDeviceScanActivity$GameFragment"
+        android:id="@+id/fragment3"
+        android:layout_width="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentBottom="true"
+        android:layout_height="400dp" />
+
 
 </RelativeLayout>

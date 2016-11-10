@@ -73,11 +73,11 @@ import butterknife.OnClick;
  */
 public class BLEDeviceScanActivity extends FragmentActivity implements AndroidFragmentApplication.Callbacks{
 
-    //Butterknife get views
-    @InjectView(R.id.refreshButton) Button refreshButton;
-    @InjectView(R.id.cloudStreamToggle) Button toggleButton;
 
-    private boolean mTwoPane;
+    @InjectView(R.id.refreshButton)
+    Button refreshButton;
+
+    private boolean mTwoPane = false;
 
     //List Variables
     private List<String> mDeviceNameList;
@@ -138,6 +138,8 @@ public class BLEDeviceScanActivity extends FragmentActivity implements AndroidFr
 
         //Start the BLE Scan
         scanLeDevice(true);
+
+
 
         //Hackathon Background Service for acknowledging messages
         if(enableHackathon==true) {
@@ -214,7 +216,7 @@ public class BLEDeviceScanActivity extends FragmentActivity implements AndroidFr
         yourListView.setAdapter(mLeDeviceListAdapter);
 
         //2. DetailList: Setup the automatically generated buttons fragment
-        activeDeviceDelegate = (NebDeviceDetailFragment) getFragmentManager().findFragmentById(R.id.button_list_fragment);
+//        activeDeviceDelegate = (NebDeviceDetailFragment) getFragmentManager().findFragmentById(R.id.button_list_fragment);
     }
 
 
@@ -243,15 +245,45 @@ public class BLEDeviceScanActivity extends FragmentActivity implements AndroidFr
 /*********************************** CALLBACK FUNCTIONS *****************************************/
 
 //Callback function for when a user chooses a BLE device
-public void onListItemClick(String deviceKey) {
+public void onListItemClick(View v ) {
+
+    CustomListAdapter.ViewHolder temp = (CustomListAdapter.ViewHolder) v.getTag();
+    String deviceKey = temp.tv.getText().toString();
+
+    activeDevice = mDeviceList.get(deviceKey);
+
+
+//Hoan's twoPane code
+    if (mTwoPane) {
+        Bundle arguments = new Bundle();
+
+        arguments.putParcelable(NebDeviceDetailFragment.ARG_ITEM_ID, activeDevice);
+        NebDeviceDetailFragment fragment = new NebDeviceDetailFragment();
+        fragment.setArguments(arguments);
+        fragment.SetItem(activeDevice);
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.nebdevice_detail_container, fragment)
+                .commit();
+    } else {
+        Context context = v.getContext();
+        //Bundle arguments = new Bundle();
+
+        //TODO: Test that the Android version actually works
+        // arguments.putSerializable(NebDeviceDetailFragment.ARG_ITEM_ID, holder.mItem);
+
+        Intent intent = new Intent(context, NebDeviceDetailFragment.class);
+        intent.putExtra(NebDeviceDetailFragment.ARG_ITEM_ID, activeDevice);
+        context.startActivity(intent);
+    }
 
     //Get the NEBLINA device and setup the NEBLINA interface
-    activeDevice = mDeviceList.get(deviceKey);
+
     activeDevice.Connect(getBaseContext());
 
-    Bundle arguments = new Bundle();
-    arguments.putParcelable(NebDeviceDetailFragment.ARG_ITEM_ID, activeDevice);
-    activeDeviceDelegate.SetItem(activeDevice);
+
+//    Bundle arguments = new Bundle();
+//    arguments.putParcelable(NebDeviceDetailFragment.ARG_ITEM_ID, activeDevice);
+//    activeDeviceDelegate.SetItem(activeDevice);
 
     //Tell the user he's connected
     Toast.makeText(this, "Connecting to " + deviceKey, Toast.LENGTH_LONG).show();
@@ -301,25 +333,6 @@ public void onListItemClick(String deviceKey) {
         scanLeDevice(true);
     }
 
-
-
-    @OnClick(R.id.cloudStreamToggle)void streamToCloud(View view) {
-
-        if(view.isActivated()){
-            isStreaming = false;
-            view.setActivated(false);
-        }else {
-            isStreaming = true;
-            view.setActivated(true);
-        }
-    }
-
-    //This starts the data visualization tools
-    @OnClick(R.id.dataVisualisation) void dataVisualization(){
-        Log.w("DEBUG", "Starting Visualization");
-        Intent intent = new Intent(this, DynamicData.class);
-        startActivity(intent);
-    }
 
     //This is used when the user is granting permissions for BLE localization
     @Override

@@ -60,7 +60,9 @@
         <service
             android:name=".notifactions.HapticService"
             android:enabled="true"
-            android:exported="true"></service>
+            android:exported="true" />
+
+        <activity android:name=".ControlPanel.PhoneNebDetail"></activity>
     </application>
 
 </manifest>

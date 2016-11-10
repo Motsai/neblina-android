@@ -10,4 +10,16 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.mygdx.game.android.ControlPanel.PhoneNebDetail">
 
+
+    <fragment
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:name="com.mygdx.game.android.NeblinaClasses.NebDeviceDetailFragment"
+        android:id="@+id/button_list_fragment"
+        android:layout_alignParentEnd="true"
+        android:layout_above="@+id/fragment3"
+        android:layout_toEndOf="@+id/refreshButton"
+        android:layout_alignEnd="@+id/textView"
+        android:layout_alignParentStart="true" />
+
 </RelativeLayout>

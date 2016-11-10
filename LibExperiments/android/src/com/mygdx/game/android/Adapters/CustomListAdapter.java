@@ -75,8 +75,8 @@ public class CustomListAdapter extends BaseAdapter {
         convertView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ViewHolder temp = (ViewHolder) v.getTag();
-                p.onListItemClick(temp.tv.getText().toString());
+
+                p.onListItemClick(v);
             }
         });
         return convertView;
@@ -85,6 +85,6 @@ public class CustomListAdapter extends BaseAdapter {
     //This will use the View Holder pattern
     public class ViewHolder
     {
-        TextView tv;
+        public TextView tv;
     }
 }

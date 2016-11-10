@@ -5,7 +5,7 @@ presents a Space Invaders visualization that you can use to verify connectivity 
 It syncs the motions of the spaceship to the motions of an active Neblina device.
 
 ![SpaceInvaders](/docPics/control.png)
-
+    
 There is a second visualization that allows you to observe in real-time the accelerometer output.
 This document will walk you through installing, running, and using the Neblina Control Panel V2.
 

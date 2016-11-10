@@ -6,6 +6,7 @@ package com.mygdx.game.android.NeblinaClasses;
  */
 
 import android.app.Fragment;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
@@ -13,6 +14,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
+import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.ListView;
 import android.widget.Switch;
@@ -36,6 +38,8 @@ import com.mygdx.game.simulation.Simulation;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+
+import butterknife.OnClick;
 
 import static com.mygdx.game.android.NeblinaClasses.Neblina.DEBUG_CMD_DUMP_DATA;
 import static com.mygdx.game.android.NeblinaClasses.Neblina.DEBUG_CMD_GET_DATAPORT;
@@ -62,8 +66,13 @@ import static com.mygdx.game.android.NeblinaClasses.Neblina.STORAGE_CMD_ERASE;
 import static com.mygdx.game.android.NeblinaClasses.Neblina.STORAGE_CMD_PLAY;
 import static com.mygdx.game.android.NeblinaClasses.Neblina.STORAGE_CMD_RECORD;
 
+//Butterknife
+import butterknife.ButterKnife;
+import butterknife.InjectView;
+import butterknife.OnClick;
+
 //This Class implements a Detail List for one specific selected Neblina device
-public class NebDeviceDetailFragment extends Fragment implements NeblinaDelegate {
+public class NebDeviceDetailFragment extends android.support.v4.app.Fragment implements NeblinaDelegate {
 
     private Neblina mNebDev;
 
@@ -137,7 +146,7 @@ public class NebDeviceDetailFragment extends Fragment implements NeblinaDelegate
     }
 
 
-    //Default onCreate() function
+    //onCreate() function
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
