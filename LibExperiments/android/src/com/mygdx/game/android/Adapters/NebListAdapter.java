@@ -113,7 +113,6 @@ public class NebListAdapter extends ArrayAdapter<NebCmdItem> {
                     break;
             }
         }
-
         return view;
     }
 }

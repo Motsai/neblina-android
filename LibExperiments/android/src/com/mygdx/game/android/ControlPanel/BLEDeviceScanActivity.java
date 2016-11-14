@@ -252,33 +252,35 @@ public void onListItemClick(View v ) {
 
     activeDevice = mDeviceList.get(deviceKey);
 
-
 //Hoan's twoPane code
     if (mTwoPane) {
         Bundle arguments = new Bundle();
-
         arguments.putParcelable(NebDeviceDetailFragment.ARG_ITEM_ID, activeDevice);
+
         NebDeviceDetailFragment fragment = new NebDeviceDetailFragment();
         fragment.setArguments(arguments);
         fragment.SetItem(activeDevice);
+
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.nebdevice_detail_container, fragment)
                 .commit();
+
+        activeDevice.Connect(getBaseContext());
     } else {
+        com.mygdx.game.Renderer.isTablet = false;
         Context context = v.getContext();
-        //Bundle arguments = new Bundle();
+        Bundle arguments = new Bundle();
 
-        //TODO: Test that the Android version actually works
-        // arguments.putSerializable(NebDeviceDetailFragment.ARG_ITEM_ID, holder.mItem);
+        arguments.putParcelable(NebDeviceDetailFragment.ARG_ITEM_ID,activeDevice);
 
-        Intent intent = new Intent(context, NebDeviceDetailFragment.class);
-        intent.putExtra(NebDeviceDetailFragment.ARG_ITEM_ID, activeDevice);
+        Intent intent = new Intent(context, PhoneNebDetail.class);
+        intent.putExtras(arguments);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         context.startActivity(intent);
     }
 
     //Get the NEBLINA device and setup the NEBLINA interface
 
-    activeDevice.Connect(getBaseContext());
 
 
 //    Bundle arguments = new Bundle();

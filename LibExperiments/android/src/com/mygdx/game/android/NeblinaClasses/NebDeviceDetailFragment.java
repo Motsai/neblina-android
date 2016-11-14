@@ -663,20 +663,9 @@ public class NebDeviceDetailFragment extends android.support.v4.app.Fragment imp
                     Regions.US_EAST_1, // Region
                     credentialsProvider);
 
-            // Create a record in a dataset and synchronize with the server
-//            com.amazonaws.mobileconnectors.cognito.Dataset dataset = syncClient.openOrCreateDataset("myDataset");
-//            dataset.put("myKey", "myValue");
-//            dataset.synchronize(new DefaultSyncCallback() {
-//                @Override
-//                public void onSuccess(com.amazonaws.mobileconnectors.cognito.Dataset dataset, List newRecords) {
-//                            Log.w("AWS_DEBUG", "Creating a Record was successful!" + identityID);
-//                }
-//            });
-
             AmazonDynamoDBClient ddbClient = new AmazonDynamoDBClient(credentialsProvider);
             DynamoDBMapper mapper = new DynamoDBMapper(ddbClient);
 
-//        clearDatabase(mapper);
             mapper.save(quaternionAWS); //seems to only create one item at a time...
 
             return null;

@@ -64,7 +64,7 @@ public class Renderer {
 	ModelBatch modelBatch;
 
 	final Vector3 tmpV = new Vector3();
-	private boolean isTablet = true;
+	public static boolean isTablet = true;
 
 	public Renderer () {
 		try {
