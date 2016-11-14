@@ -649,7 +649,7 @@ public class NebDeviceDetailFragment extends android.support.v4.app.Fragment imp
         protected Void doInBackground(String... params) {
             CognitoCachingCredentialsProvider credentialsProvider = new CognitoCachingCredentialsProvider(
                     getContext(),
-                    "us-east-1:6e702b0c-80ab-4461-9ec3-239f1d163cd5", // Identity Pool ID
+                    "us-east-1:XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXXX", // Identity Pool ID //TODO: Inset your Identity pool here to use AWS!
                     Regions.US_EAST_1 // Region
             );
 
