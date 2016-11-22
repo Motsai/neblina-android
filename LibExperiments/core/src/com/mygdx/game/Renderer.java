@@ -70,6 +70,7 @@ public class Renderer {
 		try {
 			lights = new Environment();
 			lights.add(new DirectionalLight().set(Color.WHITE, new Vector3(-1, -0.5f, 0).nor()));
+			lights.add(new DirectionalLight().set(Color.WHITE, new Vector3(1, 0.5f, 0).nor()));
 
 			spriteBatch = new SpriteBatch();
 			modelBatch = new ModelBatch();

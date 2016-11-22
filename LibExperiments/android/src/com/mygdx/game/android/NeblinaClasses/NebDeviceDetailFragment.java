@@ -19,6 +19,7 @@ import android.widget.CompoundButton;
 import android.widget.ListView;
 import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.amazonaws.auth.CognitoCachingCredentialsProvider;
 import com.amazonaws.mobileconnectors.cognito.CognitoSyncManager;
@@ -31,6 +32,7 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.mygdx.game.android.Adapters.NebCmdItem;
 import com.mygdx.game.android.Adapters.NebListAdapter;
 import com.mygdx.game.android.ControlPanel.BLEDeviceScanActivity;
+import com.mygdx.game.android.ControlPanel.DisplayActivity;
 import com.mygdx.game.android.ControlPanel.DynamicData;
 import com.mygdx.game.android.R;
 import com.mygdx.game.simulation.Simulation;
@@ -194,6 +196,30 @@ public class NebDeviceDetailFragment extends android.support.v4.app.Fragment imp
 
             }
         });
+
+        final Button button = (Button) rootView.findViewById(R.id.dataVisualisation);
+        button.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                // Perform action on click
+                Intent intent = new Intent(getContext(), DisplayActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        final Button button2 = (Button) rootView.findViewById(R.id.cloudStreamToggle);
+        button2.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(getContext(),"Please setup AWS Keys", Toast.LENGTH_LONG);
+                    }
+                });
+            }
+        });
+
+
+
         return rootView;
     }
 

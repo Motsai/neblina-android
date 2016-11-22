@@ -134,10 +134,11 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
     public static final byte MOTION_CMD_ROTATION_INFO		= 0x12;
     public static final byte MOTION_CMD_EXTRN_HEADING_CORR  = 0x13;
 
-    private int deviceNum;
+
+
     private int connectedDevNum;
 
-    //Periodic RSSI poll variables
+    /************************************* Experiment Variables ************************************/
     private boolean shouldPollRSSI = false;
     private long RETRY_TIME = 1000;
     private long START_TIME = 1000;
@@ -152,6 +153,9 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
 
     // Delay Calculation Variables //
     public static int size_max = 10000;
+    public static int histogramSizeMax = 25;
+    public static int histogramMaxValue = 500;
+    public static Number[] histogramSeriesNumbers = new Number[histogramSizeMax];
 
     // Packet Interval Variables //
     public static long[] delayTimeArray = new long[size_max];
@@ -201,6 +205,14 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
         mDelegate = null;
         mBleGatt = null;
         mCtrlChar = null;
+
+        if(BLEDeviceScanActivity.initializeHistogram==true) {
+            //initialize the histogramSeries
+            for (int i = 0; i < histogramSizeMax; i++) {
+                histogramSeriesNumbers[i] = 0;
+            }
+            BLEDeviceScanActivity.initializeHistogram = false;
+        }
     }
 
 
@@ -555,6 +567,19 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
 //                currentTime = System.nanoTime();  //Alternative Time() -> Requires about 100 clock cycles
                 currentTime = System.currentTimeMillis(); //Requires about 5 clock cycles
                 delayTime = currentTime - lastTime;
+
+                //Chop the series into 20 blocks based on the max value
+                //Go through each element of the series
+                //Increment one of the 20 blocks
+
+                int bin = (int) Math.floor(((double)delayTime / (double) histogramMaxValue ) * ( (double) histogramSizeMax - 1.0 ));
+
+                if(bin >= histogramSizeMax){
+                    histogramSeriesNumbers[histogramSizeMax-1] = histogramSeriesNumbers[histogramSizeMax-1].intValue() +1;
+                }else {
+                    histogramSeriesNumbers[bin] = histogramSeriesNumbers[bin].intValue() + 1;
+                }
+
                 if(isTimeinitializing!=true) {
                     if(file_size1 < size_max){
                         delayTimeArray[file_size1]=delayTime;
@@ -1550,9 +1575,9 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
     public void writeToParcel(Parcel out, int flags) {
         out.writeValue(Nebdev);
         out.writeLong(DevId);
-        out.writeValue(mBleGatt);
-        out.writeValue(mDelegate);
-        out.writeValue(mCtrlChar);
+//        out.writeValue(mBleGatt);
+//        out.writeValue(mDelegate);
+//        out.writeValue(mCtrlChar);
     }
 
     public static final Parcelable.Creator<Neblina> CREATOR

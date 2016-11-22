@@ -91,6 +91,7 @@ public class BLEDeviceScanActivity extends FragmentActivity implements AndroidFr
 
     //AWS cognito identity
     public String identityID = "";
+    public static boolean initializeHistogram = true;
 
     //Setup the Quaternion interface
     public static AndroidGetQ[] invaderInterfaces = new AndroidGetQ[MAX_BLE_DEVICES];
@@ -278,14 +279,6 @@ public void onListItemClick(View v ) {
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         context.startActivity(intent);
     }
-
-    //Get the NEBLINA device and setup the NEBLINA interface
-
-
-
-//    Bundle arguments = new Bundle();
-//    arguments.putParcelable(NebDeviceDetailFragment.ARG_ITEM_ID, activeDevice);
-//    activeDeviceDelegate.SetItem(activeDevice);
 
     //Tell the user he's connected
     Toast.makeText(this, "Connecting to " + deviceKey, Toast.LENGTH_LONG).show();

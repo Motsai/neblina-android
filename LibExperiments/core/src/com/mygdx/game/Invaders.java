@@ -50,6 +50,7 @@ public class Invaders extends Game implements ApplicationListener {
 	}
 
 
+	//This is the interface between the Neblina that collects the Quaternions
 	public interface InvaderInterface {
 		public int shipID = 0;
 		public void setShipNumber(int shipNumber);

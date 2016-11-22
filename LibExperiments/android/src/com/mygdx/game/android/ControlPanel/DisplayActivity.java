@@ -27,7 +27,7 @@ public class DisplayActivity extends Activity {
 
     private XYPlot plot;
     private XYPlot histogram;
-    private int histogramSizeMax = 20;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,30 +49,15 @@ public class DisplayActivity extends Activity {
             if (Neblina.delayTimeArray[i] > max_value) max_value = Neblina.delayTimeArray[i];
         }
 
-        //initialize the histogramSeries
-        Number[] histogramSeriesNumbers = new Number[histogramSizeMax];
-        for(int i =0;i<histogramSizeMax;i++){
-            histogramSeriesNumbers[i] = 0;
-        }
-        //Chop the series into 20 blocks based on the max value
-        //Go through each element of the series
-        //Increment one of the 20 blocks
-
-        for(int i=0; i<Neblina.size_max;i++){
-            double highValue = (double) max_value;
-            double value = (double) Neblina.delayTimeArray[i];
-            int bin = (int) Math.floor((value / highValue)*(histogramSizeMax-1));
-            histogramSeriesNumbers[bin] = histogramSeriesNumbers[bin].intValue() +1;
-        }
-
-
         // turn the above arrays into XYSeries':
         // (Y_VALS_ONLY means use the element index as the x value)
         XYSeries series1 = new SimpleXYSeries(Arrays.asList(series1Numbers),
                 SimpleXYSeries.ArrayFormat.Y_VALS_ONLY, "Series1");
 
-        XYSeries histogramSeries = new SimpleXYSeries(Arrays.asList(histogramSeriesNumbers),
-                SimpleXYSeries.ArrayFormat.Y_VALS_ONLY, "Histogram");
+        String histogramText = "Histogram Max Value = " + max_value;
+
+        XYSeries histogramSeries = new SimpleXYSeries(Arrays.asList(Neblina.histogramSeriesNumbers),
+                SimpleXYSeries.ArrayFormat.Y_VALS_ONLY, histogramText);
 
         // create formatters to use for drawing a series using LineAndPointRenderer
         // and configure them from xml:
@@ -93,14 +78,22 @@ public class DisplayActivity extends Activity {
 
 
         // add a new series' to the xyplot:
-        plot.addSeries(series1, series1Format);
+
+        if(Neblina.size_max <= 100000){
+            plot.addSeries(series1, series1Format);
+
+            // reduce the number of range labels
+            plot.setTicksPerRangeLabel(3);
+
+            // rotate domain labels 45 degrees to make them more compact horizontally:
+            plot.getGraphWidget().setDomainLabelOrientation(-45);
+        }
+
         histogram.addSeries(histogramSeries,histogramSeriesFormat);
 
-        // reduce the number of range labels
-        plot.setTicksPerRangeLabel(3);
 
-        // rotate domain labels 45 degrees to make them more compact horizontally:
-        plot.getGraphWidget().setDomainLabelOrientation(-45);
+
+
 
     }
 

@@ -42,7 +42,7 @@ public class Simulation implements Disposable {
 	public final static float PLAYFIELD_MAX_X = 14;
 	public final static float PLAYFIELD_MIN_Z = -15;
 	public final static float PLAYFIELD_MAX_Z = 2;
-	public final static int MAX_SHIPS = 3;
+	public final static int MAX_SHIPS = 16;
 
 	public ArrayList<Invader> invaders = new ArrayList<Invader>();
 	public ArrayList<Block> blocks = new ArrayList<Block>();
@@ -334,19 +334,19 @@ public class Simulation implements Disposable {
 	}
 
 	private void checkNextLevel () {
-		if (invaders.size() == 0 && ships[0].lives > 0) {
-			blocks.clear();
-			shots.clear();
-			shipShot = null;
-			ships[0].transform.getTranslation(tmpV1);
-
-			int lives = ships[0].lives;
-			populate();
-			ships[0].transform.setTranslation(tmpV1);
-			ships[0].lives = lives;
-			multiplier += 0.2f;
-			wave++;
-		}
+//		if (invaders.size() == 0 && ships[0].lives > 0) {
+//			blocks.clear();
+//			shots.clear();
+//			shipShot = null;
+//			ships[0].transform.getTranslation(tmpV1);
+//
+//			int lives = ships[0].lives;
+//			populate();
+//			ships[0].transform.setTranslation(tmpV1);
+//			ships[0].lives = lives;
+//			multiplier += 0.2f;
+//			wave++;
+//		}
 	}
 
 	public void moveShipLeft(float delta, float scale, int shipNumber) {
@@ -359,7 +359,7 @@ public class Simulation implements Disposable {
 
 			ships[shipNumber].transform.trn(-delta * Ship.SHIP_VELOCITY * scale, 0, 0);
 			ships[shipNumber].transform.getTranslation(tmpV1);
-			if (tmpV1.x < PLAYFIELD_MIN_X) ships[shipNumber].transform.trn(PLAYFIELD_MIN_X - tmpV1.x, 0, 0);
+			if (tmpV1.x < PLAYFIELD_MIN_X + 9) ships[shipNumber].transform.trn(PLAYFIELD_MIN_X + 9 - tmpV1.x, 0, 0);
 
 			Vector3 oldTranslation = ships[shipNumber].transform.getTranslation(tmpV1);
 			Quaternion rotateQ = new Quaternion(q0, -1 * q1, q3, -1 * q2); //Used if you want all 3-axis rotation
@@ -377,13 +377,20 @@ public class Simulation implements Disposable {
 			float q2 = (float) Invaders.mInvaderInterfaceArray[shipNumber].getQ2();
 			float q3 = (float) Invaders.mInvaderInterfaceArray[shipNumber].getQ3();
 
+        Vector3 oldTranslation = ships[shipNumber].transform.getTranslation(tmpV1);
+        Vector3 flip = new Vector3(0,0,0);
+
+        Quaternion rotateQ = new Quaternion(q0,-1*q1,q3,-1*q2); //For 3-axis
+        ships[shipNumber].transform.setToRotation(0, 0, 0, 0);
+        ships[shipNumber].transform.set(oldTranslation.mulAdd(flip, -1), rotateQ);
+
 			ships[shipNumber].transform.trn(+delta * Ship.SHIP_VELOCITY * scale, 0, 0);
-			if (tmpV1.x > PLAYFIELD_MAX_X) ships[shipNumber].transform.trn(PLAYFIELD_MAX_X - tmpV1.x, 0, 0);
-			Vector3 oldTranslation = ships[shipNumber].transform.getTranslation(tmpV1);
-			Vector3 flip = new Vector3(0,0,0);
-			Quaternion rotateQ = new Quaternion(q0,-1*q1,q3,-1*q2); //For 3-axis
-			ships[shipNumber].transform.setToRotation(0, 0, 0, 0);
-			ships[shipNumber].transform.set(oldTranslation.mulAdd(flip, -1), rotateQ);
+			if (tmpV1.x > PLAYFIELD_MAX_X - 9 ){
+				ships[shipNumber].transform.trn(PLAYFIELD_MAX_X - 9 - tmpV1.x, 0, 0);
+			}
+
+
+//            ships[shipNumber].transform.set(oldTranslation, rotateQ);
 	}
 
 	public void shot () {

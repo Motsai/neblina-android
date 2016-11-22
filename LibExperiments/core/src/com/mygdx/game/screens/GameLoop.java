@@ -107,12 +107,13 @@ public class GameLoop extends InvadersScreen implements SimulationListener {
 
 		for(int shipNumber = 0; shipNumber < simulation.MAX_SHIPS; shipNumber++){
 
-			//This assumps that it is either left or right...
+			//This assumes that it is either left or right...
 			if (0.2f * (q0s[shipNumber] * q1s[shipNumber] + q2s[shipNumber] * q3s[shipNumber]) > 0) {
-				simulation.moveShipLeft(delta, Math.abs(0.2f * (q0s[shipNumber] * q1s[shipNumber] + q2s[shipNumber] * q3s[shipNumber])),shipNumber);
-			} else{
-				simulation.moveShipRight(delta, Math.abs(0.2f * (q0s[shipNumber] * q1s[shipNumber] + q2s[shipNumber] * q3s[shipNumber])),shipNumber);
-			}
+
+					simulation.moveShipLeft(delta, Math.abs(0.2f * (q0s[shipNumber] * q1s[shipNumber] + q2s[shipNumber] * q3s[shipNumber])),shipNumber);
+				} else{
+					simulation.moveShipRight(delta, Math.abs(0.2f * (q0s[shipNumber] * q1s[shipNumber] + q2s[shipNumber] * q3s[shipNumber])),shipNumber);
+				}
 		}
 
 		if (invaders.getController() != null) {
