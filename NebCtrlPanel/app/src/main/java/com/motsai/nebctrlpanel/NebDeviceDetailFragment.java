@@ -44,6 +44,9 @@ public class NebDeviceDetailFragment extends Fragment implements NeblinaDelegate
      */
     public static final String ARG_ITEM_ID = "item_id";
     public static final NebCmdItem[] cmdList = new NebCmdItem[] {
+        new NebCmdItem((byte)0xff, (byte)0x01, "Stream/Record", 2, "Start"),
+        new NebCmdItem((byte)0xff, (byte)0x0, "Stream/Record", 2, "Stop"),
+        new NebCmdItem(Neblina.NEB_CTRL_SUBSYS_DEBUG, Neblina.DEBUG_CMD_SET_DATAPORT, "BLE Data Port", 1, ""),
         new NebCmdItem(Neblina.NEB_CTRL_SUBSYS_DEBUG, Neblina.DEBUG_CMD_SET_DATAPORT, "BLE Data Port", 1, ""),
         new NebCmdItem(Neblina.NEB_CTRL_SUBSYS_DEBUG, Neblina.DEBUG_CMD_SET_DATAPORT, "UART Data Port", 1, ""),
         new NebCmdItem(Neblina.NEB_CTRL_SUBSYS_MOTION_ENG, Neblina.MOTION_CMD_SET_FUSION_TYPE, "Fusion 9 axis", 1, ""),
@@ -187,6 +190,19 @@ public class NebDeviceDetailFragment extends Fragment implements NeblinaDelegate
                         break;
                     case EEPROM_CMD_WRITE:
                         break;
+                }
+                break;
+            case (byte)0xFF:
+                if (cmdList[idx].mCmdId==1) //start stream/record
+                {
+                    mNedDev.streamQuaternion(true);
+                    mNedDev.streamIMU(true);
+                    mNedDev.sessionRecord(true);
+                }
+                else //stop stream/record
+                {
+                    mNedDev.streamDisableAll();
+                    mNedDev.sessionRecord(false);
                 }
                 break;
         }

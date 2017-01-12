@@ -84,6 +84,7 @@ public class NebListAdapter extends ArrayAdapter<NebCmdItem> {
                 case 2: // Button
                     b.setVisibility(View.VISIBLE);
                     b.setTag(position);
+                    b.setText(p.mText);
                     b.setOnClickListener(new OnClickListener() {
                         @Override
                         public void onClick(View vi)
