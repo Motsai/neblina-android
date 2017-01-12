@@ -34,6 +34,7 @@ import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Disposable;
 import com.mygdx.game.Invaders;
+import com.mygdx.game.Renderer;
 
 import java.util.ArrayList;
 
@@ -359,7 +360,15 @@ public class Simulation implements Disposable {
 
 			ships[shipNumber].transform.trn(-delta * Ship.SHIP_VELOCITY * scale, 0, 0);
 			ships[shipNumber].transform.getTranslation(tmpV1);
-			if (tmpV1.x < PLAYFIELD_MIN_X + 9) ships[shipNumber].transform.trn(PLAYFIELD_MIN_X + 9 - tmpV1.x, 0, 0);
+
+        if(Renderer.isTablet==true) {
+            if (tmpV1.x < PLAYFIELD_MIN_X + 9)
+                ships[shipNumber].transform.trn(PLAYFIELD_MIN_X + 9 - tmpV1.x, 0, 0);
+        } else {
+            if (tmpV1.x < PLAYFIELD_MIN_X + 13)
+                ships[shipNumber].transform.trn(PLAYFIELD_MIN_X + 13 - tmpV1.x, 0, 0);
+
+        }
 
 			Vector3 oldTranslation = ships[shipNumber].transform.getTranslation(tmpV1);
 			Quaternion rotateQ = new Quaternion(q0, -1 * q1, q3, -1 * q2); //Used if you want all 3-axis rotation
@@ -385,9 +394,16 @@ public class Simulation implements Disposable {
         ships[shipNumber].transform.set(oldTranslation.mulAdd(flip, -1), rotateQ);
 
 			ships[shipNumber].transform.trn(+delta * Ship.SHIP_VELOCITY * scale, 0, 0);
-			if (tmpV1.x > PLAYFIELD_MAX_X - 9 ){
-				ships[shipNumber].transform.trn(PLAYFIELD_MAX_X - 9 - tmpV1.x, 0, 0);
-			}
+
+        if(Renderer.isTablet==true) {
+            if (tmpV1.x > PLAYFIELD_MAX_X - 9) {
+                ships[shipNumber].transform.trn(PLAYFIELD_MAX_X - 9 - tmpV1.x, 0, 0);
+            }
+        } else {
+            if (tmpV1.x > PLAYFIELD_MAX_X - 13) {
+                ships[shipNumber].transform.trn(PLAYFIELD_MAX_X - 13 - tmpV1.x, 0, 0);
+            }
+        }
 
 
 //            ships[shipNumber].transform.set(oldTranslation, rotateQ);
