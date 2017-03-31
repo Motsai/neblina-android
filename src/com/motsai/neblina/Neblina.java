@@ -16,6 +16,7 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import java.lang.String;
 
 /**
  * Created by hoanmotsai on 2016-06-10.
@@ -27,49 +28,125 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
     public static final UUID NEB_CTRLCHAR_UUID = UUID.fromString("0df9f023-1532-11e5-8960-0002a5d5c51b");
 
     // Packet types
-    public static final byte NEB_CTRL_PKTYPE_DATA		= 0;		// Data/Response
-    public static final byte NEB_CTRL_PKTYPE_ACK		= 1;		// Ack
-    public static final byte NEB_CTRL_PKTYPE_CMD		= 2;		// Command
-    public static final byte NEB_CTRL_PKTYPE_RESERVE1	= 3;
-    public static final byte NEB_CTRL_PKTYPE_ERR		= 4;		// Error response
-    public static final byte NEB_CTRL_PKTYPE_RESERVE2	= 5;		//
-    public static final byte NEB_CTRL_PKTYPE_RQSTLOG	= 6;		// Request status/error log
-    public static final byte NEB_CTRL_PKTYPE_RESERVE3	= 7;
+    public static final byte NEBLINA_PACKET_TYPE_RESPONSE		    = 0;		// Data/Response
+    public static final byte NEBLINA_PACKET_TYPE_ACK		        = 1;		// Ack
+    public static final byte NEBLINA_PACKET_TYPE_COMMAND		    = 2;		// Command
+    public static final byte NEBLINA_PACKET_TYPE_DATA	            = 3;
+    public static final byte NEBLINA_PACKET_TYPE_ERROR		        = 4;		// Error response
+    public static final byte NEBLINA_PACKET_TYPE_RESERVE_2	        = 5;		//
+    public static final byte NEBLINA_PACKET_TYPE_REQUEST_LOG	    = 6;		// Request status/error log
+    public static final byte NEBLINA_PACKET_TYPE_RESERVE_3	        = 7;
 
     // Subsystem values
-    public static final byte NEB_CTRL_SUBSYS_DEBUG		= 0;		// Status & logging
-    public static final byte NEB_CTRL_SUBSYS_MOTION_ENG	= 1;		// Motion Engine
-    public static final byte NEB_CTRL_SUBSYS_POWERMGMT	= 2;		// Power management
-    public static final byte NEB_CTRL_SUBSYS_GPIO		= 3;		// GPIO control
-    public static final byte NEB_CTRL_SUBSYS_LED		= 4;		// LED control
-    public static final byte NEB_CTRL_SUBSYS_ADC		= 5;		// ADC control
-    public static final byte NEB_CTRL_SUBSYS_DAC		= 6;		// DAC control
-    public static final byte NEB_CTRL_SUBSYS_I2C		= 7;		// I2C control
-    public static final byte NEB_CTRL_SUBSYS_SPI		= 8;		// SPI control
-    public static final byte NEB_CTRL_SUBSYS_STORAGE    = 0x0B;		//NOR flash memory recorder
-    public static final byte NEB_CTRL_SUBSYS_EEPROM		= 0x0C;		//small EEPROM storage
+    public static final byte NEBLINA_SUBSYSTEM_GENERAL		        = 0;		// Status & logging
+    public static final byte NEBLINA_SUBSYSTEM_FUSION	            = 1;		// Motion Engine
+    public static final byte NEBLINA_SUBSYSTEM_POWER	            = 2;		// Power management
+    public static final byte NEBLINA_SUBSYSTEM_GPIO		            = 3;		// GPIO control
+    public static final byte NEBLINA_SUBSYSTEM_LED		            = 4;		// LED control
+    public static final byte NEBLINA_SUBSYSTEM_ADC		            = 5;		// ADC control
+    public static final byte NEBLINA_SUBSYSTEM_DAC		            = 6;		// DAC control
+    public static final byte NEBLINA_SUBSYSTEM_I2C		            = 7;		// I2C control
+    public static final byte NEBLINA_SUBSYSTEM_SPI		            = 8;		// SPI control
+    public static final byte NEBLINA_SUBSYSTEM_DEBUG                = 9;
+    public static final byte NEBLINA_SUBSYSTEM_TEST                 = 10;
+    public static final byte NEBLINA_SUBSYSTEM_RECORDER             = 11;		//NOR flash memory recorder
+    public static final byte NEBLINA_SUBSYSTEM_EEPROM		        = 12;		//small EEPROM storage
+    public static final byte NEBLINA_SUBSYSTEM_SENSOR               = 13;
 
+    // ***
+    // General subsystem commands
+    public static final byte NEBLINA_COMMAND_GENERAL_SYSTEM_STATUS      = 1;
+    public static final byte NEBLINA_COMMAND_GENERAL_FUSION_STATUS      = 2;
+    public static final byte NEBLINA_COMMAND_GENERAL_RECORDER_STATUS	= 3;	// asks for the streaming status of the motion engine, as well as the flash recorder state
+    public static final byte NEBLINA_COMMAND_GENERAL_FIRMWARE_VERSION	= 5;    // Get firmware version
+    public static final byte NEBLINA_COMMAND_GENERAL_RSSI				= 7;	// get the BLE signal strength in db
+    public static final byte NEBLINA_COMMAND_GENERAL_INTERFACE_STATUS   = 8;    // Get streaming data interface port state.
+    public static final byte NEBLINA_COMMAND_GENERAL_INTERFACE_STATE	= 9;	// Enable/Disable streaming data interface port
+    public static final byte NEBLINA_COMMAND_GENERAL_POWER_STATUS       = 10;
+    public static final byte NEBLINA_COMMAND_GENERAL_SENSOR_STATUS	    = 11;
+    public static final byte NEBLINA_COMMAND_GENERAL_DISABLE_STREAMING	= 12;
+    public static final byte NEBLINA_COMMAND_GENERAL_RESET_TIMESTAMP	= 13;
+    public static final byte NEBLINA_COMMAND_GENERAL_FIRMWARE_UPDATE	= 14;
+    public static final byte NEBLINA_COMMAND_GENERAL_DEVICE_NAME_GET	= 15;
+    public static final byte NEBLINA_COMMAND_GENERAL_DEVICE_NAME_SET    = 16;
+
+    // ***
+    // Subsystem fusion commands
+    public static final byte NEBLINA_COMMAND_FUSION_RATE                        = 0;
+    public static final byte NEBLINA_COMMAND_FUSION_DOWNSAMPLE                  = 1;
+    public static final byte NEBLINA_COMMAND_FUSION_MOTION_STATE_STREAM         = 2;
+    public static final byte NEBLINA_COMMAND_FUSION_QUATERNION_STREAM           = 4;
+    public static final byte NEBLINA_COMMAND_FUSION_EULER_ANGLE_STREAM          = 5;
+    public static final byte NEBLINA_COMMAND_FUSION_EXTERNAL_FORCE_STREAM       = 6;
+    public static final byte NEBLINA_COMMAND_FUSION_FUSION_TYPE                 = 7;
+    public static final byte NEBLINA_COMMAND_FUSION_TRAJECTORY_RECORD           = 8;
+    public static final byte NEBLINA_COMMAND_FUSION_TRAJECTORY_INFO_STREAM	    = 9;
+    public static final byte NEBLINA_COMMAND_FUSION_PEDOMETER_STREAM            = 10;
+    public static final byte NEBLINA_COMMAND_FUSION_SITTING_STANDING_STREAM     = 12;
+    public static final byte NEBLINA_COMMAND_FUSION_LOCK_HEADING_REFERENCE	    = 13;
+    public static final byte NEBLINA_COMMAND_FUSION_FINGER_GESTURE_STREAM       = 17;
+    public static final byte NEBLINA_COMMAND_FUSION_ROTATION_INFO_STREAM   	    = 18;
+    public static final byte NEBLINA_COMMAND_FUSION_EXTERNAL_HEADING_CORRECTION = 19;
+    public static final byte NEBLINA_COMMAND_FUSION_ANALYSIS_RESET              = 20;
+    public static final byte NEBLINA_COMMAND_FUSION_ANALYSIS_CALIBRATE          = 21;
+    public static final byte NEBLINA_COMMAND_FUSION_ANALYSIS_CREATE_POSE		= 22;
+    public static final byte NEBLINA_COMMAND_FUSION_ANALYSIS_SET_ACTIVE_POSE    = 23;
+    public static final byte NEBLINA_COMMAND_FUSION_ANALYSIS_GET_ACTIVE_POSE    = 24;
+    public static final byte NEBLINA_COMMAND_FUSION_ANALYSIS_STREAM             = 25;
+    public static final byte NEBLINA_COMMAND_FUSION_ANALYSIS_POSE_INFO          = 26;
+    public static final byte NEBLINA_COMMAND_FUSION_CALIBRATE_FORWARD_POSITION  = 27;
+    public static final byte NEBLINA_COMMAND_FUSION_CALIBRATE_DOWN_POSITION     = 28;
+    public static final byte NEBLINA_COMMAND_FUSION_MOTION_DIRECTION_STREAM     = 30;
 
     // ***
     // Power management subsystem command code
-    public static final byte POWERMGMT_CMD_GET_BAT_LEVEL		= 0;	// Get battery level
-    public static final byte POWERMGMT_CMD_GET_TEMPERATURE		= 1;	// Get temperature
-    public static final byte POWERMGMT_CMD_SET_CHARGE_CURRENT	= 2;	// Set battery charge current
+    public static final byte NEBLINA_COMMAND_POWER_BATTERY		    = 0;	// Get battery level
+    public static final byte NEBLINA_COMMAND_POWER_TEMPERATURE	    = 1;	// Get battery temperature
+    public static final byte NEBLINA_COMMAND_POWER_CHARGE_CURRENT   = 2;	// Set battery charge current
+
+    // ***
+    // LED Commands
+    public static final byte NEBLINA_COMMAND_LED_STATE              = 1;    // Set LED state
+    public static final byte NEBLINA_COMMAND_LED_STATUS             = 2;    // Get LED state
 
     // ***
     // Debug subsystem command code
-    public static final byte DEBUG_CMD_PRINTF					        = 0;	// The infamous printf thing.
-    public static final byte DEBUG_CMD_SET_INTERFACE					= 1;	// sets the protocol interface - this command is now obsolete
-    public static final byte DEBUG_CMD_MOTENGINE_RECORDER_STATUS		= 2;	// asks for the streaming status of the motion engine, as well as the flash recorder state
-    public static final byte DEBUG_CMD_MOTION_ENG_UNIT_TEST_START_STOP	= 3;	// starts/stops the motion engine unit-test mode
-    public static final byte DEBUG_CMD_MOTION_ENG_UNIT_TEST_DATA		= 4;	// data being transferred between the host and Neblina for motion engine's unit testing
-    public static final byte DEBUG_CMD_GET_FW_VERSION					= 5;
-    public static final byte DEBUG_CMD_DUMP_DATA						= 6; 	// dump and forward the data to the host (for printing on the screen, etc.)
-    public static final byte DEBUG_CMD_STREAM_RSSI						= 7;	// get the BLE signal strength in db
-    public static final byte DEBUG_CMD_GET_DATAPORT						= 8;	// Get streaming data interface port state.
-    public static final byte DEBUG_CMD_SET_DATAPORT						= 9;	// Enable/Disable streaming data interface port
+    public static final byte NEBLINA_COMMAND_DEBUG_PRINTF           = 0;	// The infamous printf thing.
+    public static final byte NEBLINA_COMMAND_DEBUG_DUMP_DATA        = 1;
 
     // ***
+    // Eeprom subsystem
+    public static final byte NEBLINA_COMMAND_EEPROM_READ            = 1;    // reads 8-byte chunks of data
+    public static final byte NEBLINA_COMMAND_EEPROM_WRITE           = 2;    // write 8-bytes of data to the EEPROM
+
+    // ***
+    // Recorder subsystem commands
+    public static final byte NEBLINA_COMMAND_RECORDER_ERASE_ALL         = 1;     // erases the whole NOR flash
+    public static final byte NEBLINA_COMMAND_RECORDER_RECORD            = 2;     // start or stop recording in a new session
+    public static final byte NEBLINA_COMMAND_RECORDER_PLAYBACK          = 3;     // playing back a pre-recorded session: either start or stop
+    public static final byte NEBLINA_COMMAND_RECORDER_SESSION_COUNT     = 4;     // a command to get the total number of sessions in the NOR flash recorder
+    public static final byte NEBLINA_COMMAND_RECORDER_SESSION_INFO      = 5;     // get the session length of a session ID. The session IDs start from 0 to n-1, where n is the total number of sessions in the NOR flash
+    public static final byte NEBLINA_COMMAND_RECORDER_SESSION_READ      = 6;
+    public static final byte NEBLINA_COMMAND_RECORDER_SESSION_DOWNLOAD  = 7;
+    public static final byte NEBLINA_COMMAND_RECORDER_SESSION_OPEN      = 8;
+    public static final byte NEBLINA_COMMAND_RECORDER_SESSION_CLOSE     = 9;
+
+    // ***
+    // Sensore subsystem commands
+    public static final byte NEBLINA_COMMAND_SENSOR_SET_DOWNSAMPLE                      = 0;
+    public static final byte NEBLINA_COMMAND_SENSOR_SET_RANGE                           = 1;
+    public static final byte NEBLINA_COMMAND_SENSOR_SET_RATE                            = 2;
+    public static final byte NEBLINA_COMMAND_SENSOR_GET_DOWNSAMPLE                      = 3;
+    public static final byte NEBLINA_COMMAND_SENSOR_GET_RANGE                           = 4;
+    public static final byte NEBLINA_COMMAND_SENSOR_GET_RATE                            = 5;
+    public static final byte NEBLINA_COMMAND_SENSOR_ACCELEROMETER_STREAM                = 10;
+    public static final byte NEBLINA_COMMAND_SENSOR_GYROSCOPE_STREAM                    = 11;
+    public static final byte NEBLINA_COMMAND_SENSOR_HUMIDITY_STREAM                     = 12;
+    public static final byte NEBLINA_COMMAND_SENSOR_MAGNETOMETER_STREAM                 = 13;
+    public static final byte NEBLINA_COMMAND_SENSOR_PRESSURE_STREAM                     = 14;
+    public static final byte NEBLINA_COMMAND_SENSOR_TEMPERATURE_STREAM                  = 15;
+    public static final byte NEBLINA_COMMAND_SENSOR_ACCELEROMETER_GYROSCOPE_STREAM      = 16;
+    public static final byte NEBLINA_COMMAND_SENSOR_ACCELEROMETER_MAGNETOMETER_STREAM   = 17;
 
     //
     // Data port control
@@ -81,43 +158,7 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
     public static final byte DATAPORT_OPEN	= 1;	// Open streaming data port
     public static final byte DATAPORT_CLOSE	= 0;	// Close streaming data port
 
-    //Flash Recorder subsystem commands
-    public static final byte STORAGE_CMD_ERASE              = 0x01;     //erases the whole NOR flash
-    public static final byte STORAGE_CMD_RECORD             = 0x02;     //start or stop recording in a new session
-    public static final byte STORAGE_CMD_PLAY               = 0x03;     //playing back a pre-recorded session: either start or stop
-    public static final byte STORAGE_CMD_GET_NB_SESSION     = 0x04;     //a command to get the total number of sessions in the NOR flash recorder
-    public static final byte STORAGE_CMD_GET_SESSION_INFO   = 0x05;     //get the session length of a session ID. The session IDs start from 0 to n-1, where n is the total number of sessions in the NOR flash
-    public static final byte STORAGE_CMD_READ_SESSION       = 0x06;
 
-    // EEPROM subsystem commands and other defines
-    public static final byte EEPROM_CMD_READ        = 0x01;     //reads 8-byte chunks of data
-    public static final byte EEPROM_CMD_WRITE       = 0x02;     //write 8-bytes of data to the EEPROM
-
-    // LED Commands
-    public static final byte LED_CMD_SET_VALUE      = 1;
-    public static final byte LED_CMD_GET_VALUE      = 2;
-
-    // Motion engine commands
-    public static final byte MOTION_CMD_DOWN_SAMPLE         = 0x01;
-    public static final byte MOTION_CMD_MOTION_STATE        = 0x02;
-    public static final byte MOTION_CMD_IMU_DATA 		    = 0x03;
-    public static final byte MOTION_CMD_QUATERNION          = 0x04;
-    public static final byte MOTION_CMD_EULER_ANGLE         = 0x05;
-    public static final byte MOTION_CMD_EXTFORCE            = 0x06;
-    public static final byte MOTION_CMD_SET_FUSION_TYPE     = 0x07;
-    public static final byte MOTION_CMD_TRAJECTORY_RECORD   = 0x08;
-//#define TrajectoryRecStop 0x09
-    public static final byte MOTION_CMD_TRAJECTORY_INFO		= 0x09;
-    public static final byte MOTION_CMD_PEDOMETER           = 0x0A;
-    public static final byte MOTION_CMD_MAG_DATA            = 0x0B;
-    public static final byte MOTION_CMD_SIT_STAND			= 0x0C;
-    public static final byte MOTION_CMD_LOCK_HEADING_REF    = 0x0D;
-    public static final byte MOTION_CMD_SET_ACC_RANGE   	= 0x0E;
-    public static final byte MOTION_CMD_DISABLE_ALL_STREAM  = 0x0F;
-    public static final byte MOTION_CMD_RESET_TIMESTAMP     = 0x10;
-    public static final byte MOTION_CMD_FINGER_GESTURE      = 0x11;
-    public static final byte MOTION_CMD_ROTATION_INFO		= 0x12;
-    public static final byte MOTION_CMD_EXTRN_HEADING_CORR  = 0x13;
 
     BluetoothDevice Nebdev;
     long DevId;
@@ -135,12 +176,12 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
         int f = 0;
         int crc = 0;
 
-        //for (i = 0; i < Len; i += 1)
-        while (i < Len) {
+        for (i = 0; i < Len; i++) {
+        //while (i < Len) {
             e = crc ^ data[i];
             f = e ^ (e >> 4) ^ (e >> 7);
             crc = ((f << 1) ^ (f << 4)) & 0xff;
-            i += 1;
+          //  i += 1;
         }
 
         return (byte)crc;
@@ -211,7 +252,7 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
             descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
             mBleGatt.writeDescriptor(descriptor);
             if (mDelegate != null)
-                mDelegate.didConnectNeblina();
+                mDelegate.didConnectNeblina(this);
         }
     }
 
@@ -227,7 +268,7 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
         byte[] data = new byte[16];
         boolean errFlag = false;
 
-        if (pktype == NEB_CTRL_PKTYPE_ACK)
+        if (pktype == NEBLINA_PACKET_TYPE_ACK)
             return;
 
         if ((subsys & 0x80) == 0x80)
@@ -243,818 +284,744 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
 
 
         switch (subsys) {
-            case NEB_CTRL_SUBSYS_DEBUG:		// Status & logging
-                mDelegate.didReceiveDebugData(pkt[3], data, datalen, errFlag);
+            case NEBLINA_SUBSYSTEM_GENERAL:
+                mDelegate.didReceiveGeneralData(this, pkt[3], data, datalen, errFlag);
                 break;
-            case NEB_CTRL_SUBSYS_MOTION_ENG:// Motion Engine
-                mDelegate.didReceiveFusionData(pkt[3], data, errFlag);
+            case NEBLINA_SUBSYSTEM_FUSION:  // Motion Engine
+                mDelegate.didReceiveFusionData(this, pkt[3], data, datalen, errFlag);
                 break;
-            case NEB_CTRL_SUBSYS_POWERMGMT:	// Power management
-                mDelegate.didReceivePmgntData(pkt[3], data, datalen, errFlag);
+            case NEBLINA_SUBSYSTEM_POWER:	// Power management
+                mDelegate.didReceivePmgntData(this, pkt[3], data, datalen, errFlag);
                 break;
-            case NEB_CTRL_SUBSYS_LED:		// LED control
-                mDelegate.didReceiveLedData(pkt[3], data, datalen, errFlag);
+            case NEBLINA_SUBSYSTEM_LED:		// LED control
+                mDelegate.didReceiveLedData(this, pkt[3], data, datalen, errFlag);
                 break;
-            case NEB_CTRL_SUBSYS_STORAGE:	//NOR flash memory recorder
-                mDelegate.didReceiveStorageData(pkt[3], data, datalen, errFlag);
+            case NEBLINA_SUBSYSTEM_DEBUG:		// Status & logging
+                mDelegate.didReceiveDebugData(this, pkt[3], data, datalen, errFlag);
                 break;
-            case NEB_CTRL_SUBSYS_EEPROM:	//small EEPROM storage
-                mDelegate.didReceiveEepromData(pkt[3], data, datalen, errFlag);
+            case NEBLINA_SUBSYSTEM_RECORDER:	//NOR flash memory recorder
+                mDelegate.didReceiveRecorderData(this, pkt[3], data, datalen, errFlag);
                 break;
+            case NEBLINA_SUBSYSTEM_EEPROM:	//small EEPROM storage
+                mDelegate.didReceiveEepromData(this, pkt[3], data, datalen, errFlag);
+                break;
+            case NEBLINA_SUBSYSTEM_SENSOR:
+                mDelegate.didReceiveSensorData(this, pkt[3], data, datalen, errFlag);
         }
     }
-    // MARK : **** API
 
-    // Debug
-    public void getDataPortState() {
+    public void sendCommand(byte SubSystem, byte CmdId, int ParamLen, byte[] ParamData) {
         if (isDeviceReady() == false) {
             return;
         }
 
-        byte[] pkbuf = new byte[4];
+        byte[] pkbuf = new byte[4 + ParamLen];
 
-        pkbuf[0] = ((NEB_CTRL_PKTYPE_CMD << 5) | NEB_CTRL_SUBSYS_DEBUG); // 0x40
-        pkbuf[1] = 0;	// Data len
+        pkbuf[0] = (byte)((NEBLINA_PACKET_TYPE_COMMAND << 5) | SubSystem);
+        pkbuf[1] = (byte)ParamLen;	// Data len
         pkbuf[2] = (byte)0xFF;
-        pkbuf[3] = DEBUG_CMD_GET_DATAPORT;	// Cmd
+        pkbuf[3] = CmdId;	// Cmd
 
-        pkbuf[2] = crc8(pkbuf, pkbuf.length);
-        mCtrlChar.setValue(pkbuf); //writeValue(NSData(bytes: UnsafeMutablePointer<Void>(pkbuf), length: 4), forCharacteristic: ctrlChar, type: CBCharacteristicWriteType.WithoutResponse)
-        mBleGatt.writeCharacteristic(mCtrlChar);
-    }
-
-    public void getFirmwareVersion() {
-        if (isDeviceReady() == false) {
-            return;
+        for (int i = 0; i < ParamLen; i++) {
+            pkbuf[4 + i] = ParamData[i];
         }
 
-        byte[] pkbuf = new byte[4];
-
-        pkbuf[0] = ((NEB_CTRL_PKTYPE_CMD << 5) | NEB_CTRL_SUBSYS_DEBUG);
-        pkbuf[1] = 0;
-        pkbuf[2] = (byte)0xFF;
-        pkbuf[3] = DEBUG_CMD_GET_FW_VERSION;	// Cmd
-
         pkbuf[2] = crc8(pkbuf, pkbuf.length);
-        mCtrlChar.setValue(pkbuf);//device.writeValue(NSData(bytes: UnsafeMutablePointer<Void>(pkbuf), length: 4), forCharacteristic: ctrlChar, type: CBCharacteristicWriteType.WithoutResponse)
-        mBleGatt.writeCharacteristic(mCtrlChar);
-    }
 
-    public void getMotionStatus() {
-        if (isDeviceReady() == false) {
-            return;
-        }
-
-        byte[] pkbuf = new byte[4];
-
-        pkbuf[0] = ((NEB_CTRL_PKTYPE_CMD << 5) | NEB_CTRL_SUBSYS_DEBUG);
-        pkbuf[1] = 0;
-        pkbuf[2] = (byte)0xFF;
-        pkbuf[3] = DEBUG_CMD_MOTENGINE_RECORDER_STATUS;	// Cmd
-
-        //device.writeValue(NSData(bytes: UnsafeMutablePointer<Void>(pkbuf), length: 20), forCharacteristic: ctrlChar, type: CBCharacteristicWriteType.WithoutResponse)
-        pkbuf[2] = crc8(pkbuf, pkbuf.length);
         mCtrlChar.setValue(pkbuf);
         mBleGatt.writeCharacteristic(mCtrlChar);
+    }
+
+    // ********************************
+    // * Neblina Command API
+    // ********************************
+    //
+    // ***
+    // *** Subsystem General
+    // ***
+
+    public void getSystemStatus() {
+        sendCommand(NEBLINA_SUBSYSTEM_GENERAL, NEBLINA_COMMAND_GENERAL_SYSTEM_STATUS, 0, null);
+    }
+
+    public void getFusionStatus() {
+        sendCommand(NEBLINA_SUBSYSTEM_GENERAL, NEBLINA_COMMAND_GENERAL_FUSION_STATUS, 0, null);
     }
 
     public void getRecorderStatus() {
-        if (isDeviceReady() == false) {
-            return;
-        }
-
-        byte[] pkbuf = new byte[4];
-
-        pkbuf[0] = ((NEB_CTRL_PKTYPE_CMD << 5) | NEB_CTRL_SUBSYS_DEBUG);
-        pkbuf[1] = 0;
-        pkbuf[2] = (byte)0xFF;
-        pkbuf[3] = DEBUG_CMD_MOTENGINE_RECORDER_STATUS;	// Cmd
-
-        pkbuf[2] = crc8(pkbuf, pkbuf.length);
-        mCtrlChar.setValue(pkbuf);
-        mBleGatt.writeCharacteristic(mCtrlChar);
-        //device.writeValue(NSData(bytes: UnsafeMutablePointer<Void>(pkbuf), length: 20), forCharacteristic: ctrlChar, type: CBCharacteristicWriteType.WithoutResponse)
+        sendCommand(NEBLINA_SUBSYSTEM_GENERAL, NEBLINA_COMMAND_GENERAL_RECORDER_STATUS, 0, null);
     }
 
-    public void setDataPort(int PortIdx, byte Ctrl) {
-        if (isDeviceReady() == false) {
-            return;
-        }
-
-        byte[] pkbuf = new byte[6];
-
-        pkbuf[0] = ((NEB_CTRL_PKTYPE_CMD << 5) | NEB_CTRL_SUBSYS_DEBUG); // 0x40
-        pkbuf[1] = 2;
-        pkbuf[2] = (byte)0xFF;
-        pkbuf[3] = DEBUG_CMD_SET_DATAPORT;	// Cmd
-
-        // Port = 0 : BLE
-        // Port = 1 : UART
-        pkbuf[4] = (byte)PortIdx;
-        pkbuf[5] = Ctrl;		// 1 - Open, 0 - Close
-
-        pkbuf[2] = crc8(pkbuf, pkbuf.length);
-        mCtrlChar.setValue(pkbuf);
-        mBleGatt.writeCharacteristic(mCtrlChar);
-        //device.writeValue(NSData(bytes: UnsafeMutablePointer<Void>(pkbuf), length: 6), forCharacteristic: ctrlChar, type: CBCharacteristicWriteType.WithoutResponse)
+    public void getFirmwareVersion() {
+        sendCommand(NEBLINA_SUBSYSTEM_GENERAL, NEBLINA_COMMAND_GENERAL_FIRMWARE_VERSION, 0, null);
     }
 
-    public void setInterface(byte Interf) {
-        if (isDeviceReady() == false) {
-            return;
-        }
-
-        byte[] pkbuf = new byte[9];
-
-        pkbuf[0] = ((NEB_CTRL_PKTYPE_CMD << 5) | NEB_CTRL_SUBSYS_DEBUG); // 0x40
-        pkbuf[1] = 5;
-        pkbuf[2] = (byte)0xFF;
-        pkbuf[3] = DEBUG_CMD_SET_INTERFACE;	// Cmd
-
-        // Interf = 0 : BLE
-        // Interf = 1 : UART
-        pkbuf[4] = Interf;
-        pkbuf[8] = 0;
-
-        pkbuf[2] = crc8(pkbuf, pkbuf.length);
-        mCtrlChar.setValue(pkbuf);
-        mBleGatt.writeCharacteristic(mCtrlChar);
-        //device.writeValue(NSData(bytes: UnsafeMutablePointer<Void>(pkbuf), length: 20), forCharacteristic: ctrlChar, type: CBCharacteristicWriteType.WithoutResponse)
+    public void getDataPortState() {
+        sendCommand(NEBLINA_SUBSYSTEM_GENERAL, NEBLINA_COMMAND_GENERAL_INTERFACE_STATUS, 0, null);
     }
 
+    public void setDataPort(int PortIdx, int Ctrl) {
+        byte[] param = new byte[2];
+
+        param[0] = (byte)PortIdx;
+        param[1] = (byte)Ctrl;		// 1 - Open, 0 - Close
+
+        sendCommand(NEBLINA_SUBSYSTEM_GENERAL, NEBLINA_COMMAND_GENERAL_INTERFACE_STATE, param.length, param);
+    }
+
+    public void getPowerStatus() {
+        sendCommand(NEBLINA_SUBSYSTEM_GENERAL, NEBLINA_COMMAND_GENERAL_POWER_STATUS, 0, null);
+    }
+
+    public void getSensorStatus() {
+        sendCommand(NEBLINA_SUBSYSTEM_GENERAL, NEBLINA_COMMAND_GENERAL_SENSOR_STATUS, 0, null);
+    }
+
+    public void disableStreaming() {
+        sendCommand(NEBLINA_SUBSYSTEM_GENERAL, NEBLINA_COMMAND_GENERAL_DISABLE_STREAMING, 0, null);
+    }
+
+    public void resetTimeStamp( boolean Delayed) {
+        byte[] param = new byte[1];
+
+        if (Delayed == true) {
+            param[0] = 1;
+        }
+		else {
+            param[0] = 0;
+        }
+
+        sendCommand(NEBLINA_SUBSYSTEM_GENERAL, NEBLINA_COMMAND_GENERAL_RESET_TIMESTAMP, param.length, param);
+    }
+
+    public void firmwareUpdate() {
+        sendCommand(NEBLINA_SUBSYSTEM_GENERAL, NEBLINA_COMMAND_GENERAL_FIRMWARE_UPDATE, 0, null);
+    }
+
+    public void getDeviceName() {
+        sendCommand(NEBLINA_SUBSYSTEM_GENERAL, NEBLINA_COMMAND_GENERAL_DEVICE_NAME_GET, 0, null);
+    }
+
+    public void setDeviceName(String name) {
+        byte[] param = name.getBytes();
+
+        sendCommand(NEBLINA_SUBSYSTEM_GENERAL, NEBLINA_COMMAND_GENERAL_DEVICE_NAME_SET, param.length, param);
+    }
+
+    // ***
     // *** EEPROM
-    public void eepromRead(int pageNo) {
-        if (isDeviceReady() == false) {
-            return;
-        }
+    // ***
+    public void eepromRead(short pageNo) {
+        byte[] param = new byte[2];
 
-        byte[] pkbuf = new byte[6];
+        param[0] = (byte)(pageNo & 0xff);
+        param[1] = (byte)((pageNo >> 8) & 0xff);
 
-        pkbuf[0] = ((NEB_CTRL_PKTYPE_CMD << 5) | NEB_CTRL_SUBSYS_EEPROM);
-        pkbuf[1] = 6;
-        pkbuf[2] = (byte)0xFF;
-        pkbuf[3] = EEPROM_CMD_READ; // Cmd
-
-        pkbuf[4] = (byte)(pageNo & 0xff);
-        pkbuf[5] = (byte)((pageNo >> 8) & 0xff);
-
-        pkbuf[2] = crc8(pkbuf, pkbuf.length);
-        mCtrlChar.setValue(pkbuf);
-        mBleGatt.writeCharacteristic(mCtrlChar);
-        //device.writeValue(NSData(bytes: UnsafeMutablePointer<Void>(pkbuf), length: 20), forCharacteristic: ctrlChar, type: CBCharacteristicWriteType.WithoutResponse)
+        sendCommand(NEBLINA_SUBSYSTEM_EEPROM, NEBLINA_COMMAND_EEPROM_READ, param.length, param);
     }
 
-    public void eepromWrite(int pageNo, byte[] data) {
-        if (isDeviceReady() == false) {
-            return;
+    public void eepromWrite(short pageNo, byte[] data) {
+        byte[] param = new byte[2 + data.length];
+
+        param[0] = (byte)(pageNo & 0xff);
+        param[1] = (byte)((pageNo >> 8) & 0xff);
+
+        for (int i = 0; i < 8; i++) {
+            param[i + 2] = data[i];
         }
 
-        byte[] pkbuf = new byte[20];
-
-        pkbuf[0] = ((NEB_CTRL_PKTYPE_CMD << 5) | NEB_CTRL_SUBSYS_EEPROM);
-        pkbuf[1] = 16;
-        pkbuf[2] = (byte)0xff;
-        pkbuf[3] = EEPROM_CMD_WRITE; // Cmd
-
-        pkbuf[4] = (byte)(pageNo & 0xff);
-        pkbuf[5] = (byte)((pageNo >> 8) & 0xff);
-
-        for (int i = 0; i < 8; i += 1) {
-            pkbuf[i + 6] = data[i];
-        }
-
-        pkbuf[2] = crc8(pkbuf, pkbuf.length);
-        mCtrlChar.setValue(pkbuf);
-        mBleGatt.writeCharacteristic(mCtrlChar);
-        //device.writeValue(NSData(bytes: UnsafeMutablePointer<Void>(pkbuf), length: 20), forCharacteristic: ctrlChar, type: CBCharacteristicWriteType.WithoutResponse)
+        sendCommand(NEBLINA_SUBSYSTEM_EEPROM, NEBLINA_COMMAND_EEPROM_WRITE, param.length, param);
     }
 
     // *** LED subsystem commands
     public void getLed() {
-        if (isDeviceReady() == false) {
-            return;
-        }
-
-        byte[] pkbuf = new byte[4];
-
-        pkbuf[0] = ((NEB_CTRL_PKTYPE_CMD << 5) | NEB_CTRL_SUBSYS_LED);
-        pkbuf[1] = 0;	// Data length
-        pkbuf[2] = (byte)0xff;
-        pkbuf[3] = LED_CMD_GET_VALUE;	// Cmd
-
-        pkbuf[2] = crc8(pkbuf, pkbuf.length);
-        mCtrlChar.setValue(pkbuf);
-        mBleGatt.writeCharacteristic(mCtrlChar);
-        //device.writeValue(NSData(bytes: UnsafeMutablePointer<Void>(pkbuf), length: 4), forCharacteristic: ctrlChar, type: CBCharacteristicWriteType.WithoutResponse)
+        sendCommand(NEBLINA_SUBSYSTEM_LED, NEBLINA_COMMAND_LED_STATUS, 0, null);
     }
 
     public void setLed(byte LedNo, byte Value) {
-        if (isDeviceReady() == false) {
-            return;
-        }
+        byte[] param = new byte[2];
 
-        byte[] pkbuf = new byte[20];
+        param[0] = LedNo;
+        param[1] = Value;
 
-        pkbuf[0] = ((NEB_CTRL_PKTYPE_CMD << 5) | NEB_CTRL_SUBSYS_LED);
-        pkbuf[1] = 16;
-        pkbuf[2] = (byte)0xff;
-        pkbuf[3] = LED_CMD_SET_VALUE;	// Cmd
-
-        // Nb of LED to set
-        pkbuf[4] = 1;
-        pkbuf[5] = LedNo;
-        pkbuf[6] = Value;
-
-        pkbuf[2] = crc8(pkbuf, pkbuf.length);
-        mCtrlChar.setValue(pkbuf);
-        mBleGatt.writeCharacteristic(mCtrlChar);
-        //device.writeValue(NSData(bytes: UnsafeMutablePointer<Void>(pkbuf), length: 20), forCharacteristic: ctrlChar, type: CBCharacteristicWriteType.WithoutResponse)
+        sendCommand(NEBLINA_SUBSYSTEM_LED, NEBLINA_COMMAND_LED_STATE, param.length, param);
     }
 
     // *** Power management sybsystem commands
     public void getTemperature() {
-        if (isDeviceReady() == false) {
-            return;
-        }
-
-        byte[] pkbuf = new byte[4];
-
-        pkbuf[0] = ((NEB_CTRL_PKTYPE_CMD << 5) | NEB_CTRL_SUBSYS_POWERMGMT);
-        pkbuf[1] = 0;	// Data length
-        pkbuf[2] = (byte)0xff;
-        pkbuf[3] = POWERMGMT_CMD_GET_TEMPERATURE;	// Cmd
-
-        pkbuf[2] = crc8(pkbuf, pkbuf.length);
-        mCtrlChar.setValue(pkbuf);
-        mBleGatt.writeCharacteristic(mCtrlChar);
-        //device.writeValue(NSData(bytes: UnsafeMutablePointer<Void>(pkbuf), length: 4), forCharacteristic: ctrlChar, type: CBCharacteristicWriteType.WithoutResponse)
+        sendCommand(NEBLINA_SUBSYSTEM_POWER, NEBLINA_COMMAND_POWER_TEMPERATURE, 0, null);
     }
 
-    public void setBatteryChargeCurrent(int Current) {
-        if (isDeviceReady() == false) {
-            return;
-        }
+    public void setBatteryChargeCurrent(short Current) {
+        byte[] param = new byte[2];
 
-        byte[] pkbuf = new byte[6];
+        param[0] = (byte)(Current & 0xFF);
+        param[1] = (byte)((Current >> 8) & 0xFF);
 
-        pkbuf[0] = ((NEB_CTRL_PKTYPE_CMD << 5) | NEB_CTRL_SUBSYS_POWERMGMT);
-        pkbuf[1] = 2;	// Data length
-        pkbuf[2] = (byte)0xff;
-        pkbuf[3] = POWERMGMT_CMD_SET_CHARGE_CURRENT;	// Cmd
-
-        // Data
-        pkbuf[4] = (byte)(Current & 0xFF);
-        pkbuf[5] = (byte)((Current >> 8) & 0xFF);
-
-        pkbuf[2] = crc8(pkbuf, pkbuf.length);
-        mCtrlChar.setValue(pkbuf);
-        mBleGatt.writeCharacteristic(mCtrlChar);
-        //device.writeValue(NSData(bytes: UnsafeMutablePointer<Void>(pkbuf), length: 6), forCharacteristic: ctrlChar, type: CBCharacteristicWriteType.WithoutResponse)
+        sendCommand(NEBLINA_SUBSYSTEM_POWER, NEBLINA_COMMAND_POWER_CHARGE_CURRENT, param.length, param);
     }
 
-    // *** Motion Settings
-    public void setAccelerometerRange(byte Mode) {
-        if (isDeviceReady() == false) {
-            return;
-        }
+    // ***
+    // *** Fusion subsystem commands
+    // ***
+    public void setFusionRate(short Rate) {
+        byte[] param = new byte[2];
 
-        byte[] pkbuf = new byte[20];
+        param[0] = (byte)(Rate & 0xFF);
+        param[1] = (byte)((Rate >> 8) & 0xFF);
 
-        pkbuf[0] = ((NEB_CTRL_PKTYPE_CMD << 5) | NEB_CTRL_SUBSYS_MOTION_ENG); //0x41
-        pkbuf[1] = 16;//UInt8(sizeof(Fusion_DataPacket_t))
-        pkbuf[2] = (byte)0xff;
-        pkbuf[3] = MOTION_CMD_SET_ACC_RANGE;	// Cmd
-        pkbuf[8] = Mode;
-
-        pkbuf[2] = crc8(pkbuf, pkbuf.length);
-        mCtrlChar.setValue(pkbuf);
-        mBleGatt.writeCharacteristic(mCtrlChar);
-//device.writeValue(NSData(bytes: UnsafeMutablePointer<Void>(pkbuf), length: 20), forCharacteristic: ctrlChar, type: CBCharacteristicWriteType.WithoutResponse)
+        sendCommand(NEBLINA_SUBSYSTEM_FUSION, NEBLINA_COMMAND_FUSION_RATE, param.length, param);
     }
 
-    public void setFusionType(byte Mode) {
-        if (isDeviceReady() == false) {
-            return;
-        }
+    public void setFusionDownSample(short Rate) {
+        byte[] param = new byte[2];
 
-        byte[] pkbuf = new byte[20];
+        param[0] = (byte)(Rate & 0xFF);
+        param[1] = (byte)((Rate >> 8) & 0xFF);
 
-        pkbuf[0] = ((NEB_CTRL_PKTYPE_CMD << 5) | NEB_CTRL_SUBSYS_MOTION_ENG); //0x41
-        pkbuf[1] = 16;//UInt8(sizeof(Fusion_DataPacket_t))
-        pkbuf[2] = (byte)0xff;
-        pkbuf[3] = MOTION_CMD_SET_FUSION_TYPE;	// Cmd
-
-        // Data
-        pkbuf[8] = Mode;
-
-        pkbuf[2] = crc8(pkbuf, pkbuf.length);
-        mCtrlChar.setValue(pkbuf);
-        mBleGatt.writeCharacteristic(mCtrlChar);
-//device.writeValue(NSData(bytes: UnsafeMutablePointer<Void>(pkbuf), length: 20), forCharacteristic: ctrlChar, type: CBCharacteristicWriteType.WithoutResponse)
-    }
-
-    public void setLockHeadingReference(boolean Enable) {
-        if (isDeviceReady() == false) {
-            return;
-        }
-
-        byte[] pkbuf = new byte[20];
-
-        pkbuf[0] = ((NEB_CTRL_PKTYPE_CMD << 5) | NEB_CTRL_SUBSYS_MOTION_ENG); //0x41
-        pkbuf[1] = 16;//UInt8(sizeof(Fusion_DataPacket_t))
-        pkbuf[2] = (byte)0xff;
-        pkbuf[3] = MOTION_CMD_LOCK_HEADING_REF;	// Cmd
-
-        pkbuf[2] = crc8(pkbuf, pkbuf.length);
-        mCtrlChar.setValue(pkbuf);
-        mBleGatt.writeCharacteristic(mCtrlChar);
-    //device.writeValue(NSData(bytes: UnsafeMutablePointer<Void>(pkbuf), length: 20), forCharacteristic: ctrlChar, type: CBCharacteristicWriteType.WithoutResponse)
-    }
-
-    // *** Motion Streaming Send
-    public void streamDisableAll()
-    {
-        if (isDeviceReady() == false) {
-            return;
-        }
-
-        byte[] pkbuf = new byte[20];
-
-        pkbuf[0] = ((NEB_CTRL_PKTYPE_CMD << 5) | NEB_CTRL_SUBSYS_MOTION_ENG);
-        pkbuf[1] = 16;//UInt8(sizeof(Fusion_DataPacket_t))
-        pkbuf[2] = (byte)0xff;
-        pkbuf[3] = MOTION_CMD_DISABLE_ALL_STREAM;	// Cmd
-
-        pkbuf[2] = crc8(pkbuf, pkbuf.length);
-        mCtrlChar.setValue(pkbuf);
-        mBleGatt.writeCharacteristic(mCtrlChar);
-//device.writeValue(NSData(bytes: UnsafeMutablePointer<Void>(pkbuf), length: 20), forCharacteristic: ctrlChar, type: CBCharacteristicWriteType.WithoutResponse)
-    }
-
-    public void streamEulerAngle(boolean Enable)
-    {
-        if (isDeviceReady() == false) {
-            return;
-        }
-
-        byte[] pkbuf = new byte[20];
-
-        pkbuf[0] = ((NEB_CTRL_PKTYPE_CMD << 5) | NEB_CTRL_SUBSYS_MOTION_ENG); //0x41
-        pkbuf[1] = 16;//UInt8(sizeof(Fusion_DataPacket_t))
-        pkbuf[2] = (byte)0xff;
-        pkbuf[3] = MOTION_CMD_EULER_ANGLE; // Cmd
-
-        if (Enable == true)
-        {
-            pkbuf[8] = 1;
-        }
-        else
-        {
-            pkbuf[8] = 0;
-        }
-
-        pkbuf[2] = crc8(pkbuf, pkbuf.length);
-        mCtrlChar.setValue(pkbuf);
-        mBleGatt.writeCharacteristic(mCtrlChar);
-//device.writeValue(NSData(bytes: UnsafeMutablePointer<Void>(pkbuf), length: 20), forCharacteristic: ctrlChar, type: CBCharacteristicWriteType.WithoutResponse)
-    }
-
-    public void streamExternalForce(boolean Enable)
-    {
-        if (isDeviceReady() == false) {
-            return;
-        }
-
-        byte[] pkbuf = new byte[20];
-
-        pkbuf[0] = ((NEB_CTRL_PKTYPE_CMD << 5) | NEB_CTRL_SUBSYS_MOTION_ENG); //0x41
-        pkbuf[1] = 16;//UInt8(sizeof(Fusion_DataPacket_t))
-        pkbuf[2] = (byte)0xff;
-        pkbuf[3] = MOTION_CMD_EXTFORCE;	// Cmd
-
-        if (Enable == true)
-        {
-            pkbuf[8] = 1;
-        }
-        else
-        {
-            pkbuf[8] = 0;
-        }
-
-        pkbuf[2] = crc8(pkbuf, pkbuf.length);
-        mCtrlChar.setValue(pkbuf);
-        mBleGatt.writeCharacteristic(mCtrlChar);
-
-        //device.writeValue(NSData(bytes: UnsafeMutablePointer<Void>(pkbuf), length: 20), forCharacteristic: ctrlChar, type: CBCharacteristicWriteType.WithoutResponse)
-    }
-
-    public void streamIMU(boolean Enable)
-    {
-        if (isDeviceReady() == false) {
-            return;
-        }
-
-        byte[] pkbuf = new byte[20];
-
-        pkbuf[0] = ((NEB_CTRL_PKTYPE_CMD << 5) | NEB_CTRL_SUBSYS_MOTION_ENG); //0x41
-        pkbuf[1] = 16;//(sizeof(Fusion_DataPacket_t))
-        pkbuf[2] = (byte)0xff;
-        pkbuf[3] = MOTION_CMD_IMU_DATA;	// Cmd
-
-        if (Enable == true)
-        {
-            pkbuf[8] = 1;
-        }
-        else
-        {
-            pkbuf[8] = 0;
-        }
-
-        pkbuf[2] = crc8(pkbuf, pkbuf.length);
-        mCtrlChar.setValue(pkbuf);
-        mBleGatt.writeCharacteristic(mCtrlChar);
-
-        //device.writeValue(NSData(bytes: UnsafeMutablePointer<Void>(pkbuf), length: 20), forCharacteristic: ctrlChar, type: CBCharacteristicWriteType.WithoutResponse)
-    }
-
-    public void streamMAG(boolean Enable)
-    {
-        if (isDeviceReady() == false) {
-            return;
-        }
-
-        byte[] pkbuf = new byte[20];
-
-        pkbuf[0] = ((NEB_CTRL_PKTYPE_CMD << 5) | NEB_CTRL_SUBSYS_MOTION_ENG); //0x41
-        pkbuf[1] = 16;//UInt8(sizeof(Fusion_DataPacket_t))
-        pkbuf[2] = (byte)0xff;
-        pkbuf[3] = MOTION_CMD_MAG_DATA;	// Cmd
-
-        if (Enable == true)
-        {
-            pkbuf[8] = 1;
-        }
-        else
-        {
-            pkbuf[8] = 0;
-        }
-
-        pkbuf[2] = crc8(pkbuf, pkbuf.length);
-        mCtrlChar.setValue(pkbuf);
-        mBleGatt.writeCharacteristic(mCtrlChar);
-
-        //device.writeValue(NSData(bytes: UnsafeMutablePointer<Void>(pkbuf), length: 20), forCharacteristic: ctrlChar, type: CBCharacteristicWriteType.WithoutResponse)
+        sendCommand( NEBLINA_SUBSYSTEM_FUSION, NEBLINA_COMMAND_FUSION_DOWNSAMPLE, param.length, param);
     }
 
     public void streamMotionState(boolean Enable)
     {
-        if (isDeviceReady() == false) {
-            return;
-        }
-
-        byte[] pkbuf = new byte[20];
-
-        pkbuf[0] = ((NEB_CTRL_PKTYPE_CMD << 5) | NEB_CTRL_SUBSYS_MOTION_ENG); //0x41
-        pkbuf[1] = 16; //UInt8(sizeof(Fusion_DataPacket_t))
-        pkbuf[2] = (byte)0xff;
-        pkbuf[3] = MOTION_CMD_MOTION_STATE;	// Cmd
+        byte[] param= new byte[1];
 
         if (Enable == true)
         {
-            pkbuf[8] = 1;
+            param[0] = 1;
         }
-        else
+		else
         {
-            pkbuf[8] = 0;
+            param[0] = 0;
         }
 
-        pkbuf[2] = crc8(pkbuf, pkbuf.length);
-        mCtrlChar.setValue(pkbuf);
-        mBleGatt.writeCharacteristic(mCtrlChar);
-
-        //device.writeValue(NSData(bytes: UnsafeMutablePointer<Void>(pkbuf), length: 20), forCharacteristic: ctrlChar, type: CBCharacteristicWriteType.WithoutResponse)
-    }
-
-    public void streamPedometer(boolean Enable)
-    {
-        if (isDeviceReady() == false) {
-            return;
-        }
-
-        byte[] pkbuf = new byte[20];
-
-        pkbuf[0] = ((NEB_CTRL_PKTYPE_CMD << 5) | NEB_CTRL_SUBSYS_MOTION_ENG); //0x41
-        pkbuf[1] = 16;//UInt8(sizeof(Fusion_DataPacket_t))
-        pkbuf[2] = (byte)0xff;
-        pkbuf[3] = MOTION_CMD_PEDOMETER; // Cmd
-
-        if (Enable == true)
-        {
-            pkbuf[8] = 1;
-        }
-        else
-        {
-            pkbuf[8] = 0;
-        }
-
-        pkbuf[2] = crc8(pkbuf, pkbuf.length);
-        mCtrlChar.setValue(pkbuf);
-        mBleGatt.writeCharacteristic(mCtrlChar);
-
-        //device.writeValue(NSData(bytes: UnsafeMutablePointer<Void>(pkbuf), length: 20), forCharacteristic: ctrlChar, type: CBCharacteristicWriteType.WithoutResponse)
+        sendCommand(NEBLINA_SUBSYSTEM_FUSION, NEBLINA_COMMAND_FUSION_MOTION_STATE_STREAM, param.length, param);
     }
 
     public void streamQuaternion(boolean Enable)
     {
-        if (isDeviceReady() == false) {
-            return;
-        }
-
-        byte[] pkbuf = new byte[20];
-
-        pkbuf[0] = ((NEB_CTRL_PKTYPE_CMD << 5) | NEB_CTRL_SUBSYS_MOTION_ENG); //0x41
-        pkbuf[1] = 16;//UInt8(sizeof(Fusion_DataPacket_t))
-        pkbuf[2] = (byte)0xff;
-        pkbuf[3] = MOTION_CMD_QUATERNION;	// Cmd
+        byte[] param = new byte[1];
 
         if (Enable == true)
         {
-            pkbuf[8] = 1;
+            param[0] = 1;
         }
-        else
+		else
         {
-            pkbuf[8] = 0;
+            param[0] = 0;
         }
 
-        pkbuf[2] = crc8(pkbuf, pkbuf.length);
-        mCtrlChar.setValue(pkbuf);
-        mBleGatt.writeCharacteristic(mCtrlChar);
-
-        //device.writeValue(NSData(bytes: UnsafeMutablePointer<Void>(pkbuf), length: 20), forCharacteristic: ctrlChar, type: CBCharacteristicWriteType.WithoutResponse)
+        sendCommand(NEBLINA_SUBSYSTEM_FUSION, NEBLINA_COMMAND_FUSION_QUATERNION_STREAM, param.length, param);
     }
 
-    public void streamRotationInfo(boolean Enable) {
-        if (isDeviceReady() == false) {
-            return;
-        }
-
-        byte[] pkbuf = new byte[20];
-
-        pkbuf[0] = ((NEB_CTRL_PKTYPE_CMD << 5) | NEB_CTRL_SUBSYS_MOTION_ENG); //0x41
-        pkbuf[1] = 16;//UInt8(sizeof(Fusion_DataPacket_t))
-        pkbuf[2] = (byte)0xff;
-        pkbuf[3] = MOTION_CMD_ROTATION_INFO;	// Cmd
-
-        if (Enable == true)
-        {
-            pkbuf[8] = 1;
-        }
-        else
-        {
-            pkbuf[8] = 0;
-        }
-
-        pkbuf[2] = crc8(pkbuf, pkbuf.length);
-        mCtrlChar.setValue(pkbuf);
-        mBleGatt.writeCharacteristic(mCtrlChar);
-
-        //device.writeValue(NSData(bytes: UnsafeMutablePointer<Void>(pkbuf), length: 20), forCharacteristic: ctrlChar, type: CBCharacteristicWriteType.WithoutResponse)
-    }
-
-    public void  streamSittingStanding(boolean Enable) {
-        if (isDeviceReady() == false) {
-            return;
-        }
-
-        byte[] pkbuf = new byte[20];
-
-        pkbuf[0] = ((NEB_CTRL_PKTYPE_CMD << 5) | NEB_CTRL_SUBSYS_MOTION_ENG); //0x41
-        pkbuf[1] = 16;//UInt8(sizeof(Fusion_DataPacket_t));
-        pkbuf[2] = (byte)0xff;
-        pkbuf[3] = MOTION_CMD_SIT_STAND;	// Cmd
-
-        if (Enable == true)
-        {
-            pkbuf[8] = 1;
-        }
-        else
-        {
-            pkbuf[8] = 0;
-        }
-
-        pkbuf[2] = crc8(pkbuf, pkbuf.length);
-        mCtrlChar.setValue(pkbuf);
-        mBleGatt.writeCharacteristic(mCtrlChar);
-
-        //device.writeValue(NSData(bytes: UnsafeMutablePointer<Void>(pkbuf), length: 20), forCharacteristic: ctrlChar, type: CBCharacteristicWriteType.WithoutResponse)
-    }
-
-    public void streamTrajectoryInfo(boolean Enable)
+    public void streamEulerAngle(boolean Enable)
     {
-        if (isDeviceReady() == false) {
-            return;
-        }
-
-        byte[] pkbuf = new byte[20];
-
-        pkbuf[0] = ((NEB_CTRL_PKTYPE_CMD << 5) | NEB_CTRL_SUBSYS_MOTION_ENG); //0x41
-        pkbuf[1] = 16;//UInt8(sizeof(Fusion_DataPacket_t))
-        pkbuf[2] = (byte)0xff;
-        pkbuf[3] = MOTION_CMD_TRAJECTORY_INFO;	// Cmd
+        byte[] param = new byte[1];
 
         if (Enable == true)
         {
-            pkbuf[8] = 1;
+            param[0] = 1;
         }
-        else
+		else
         {
-            pkbuf[8] = 0;
+            param[0] = 0;
         }
 
-        pkbuf[2] = crc8(pkbuf, pkbuf.length);
-        mCtrlChar.setValue(pkbuf);
-        mBleGatt.writeCharacteristic(mCtrlChar);
-
-        //device.writeValue(NSData(bytes: UnsafeMutablePointer<Void>(pkbuf), length: 20), forCharacteristic: ctrlChar, type: CBCharacteristicWriteType.WithoutResponse)
+        sendCommand(NEBLINA_SUBSYSTEM_FUSION, NEBLINA_COMMAND_FUSION_EULER_ANGLE_STREAM, param.length, param);
     }
 
-    // *** Motion utilities
-    public void resetTimeStamp() {
-        if (isDeviceReady() == false) {
-            return;
+    public void streamExternalForce(boolean Enable)
+    {
+        byte[] param = new byte[1];
+
+        if (Enable == true)
+        {
+            param[0] = 1;
+        }
+		else
+        {
+            param[0] = 0;
         }
 
-        byte[] pkbuf = new byte[20];
+        sendCommand(NEBLINA_SUBSYSTEM_FUSION, NEBLINA_COMMAND_FUSION_EXTERNAL_FORCE_STREAM, param.length, param);
+    }
 
-        pkbuf[0] = ((NEB_CTRL_PKTYPE_CMD << 5) | NEB_CTRL_SUBSYS_MOTION_ENG);
-        pkbuf[1] = 16; //UInt8(sizeof(Fusion_DataPacket_t))
-        pkbuf[2] = (byte)0xff;
-        pkbuf[3] = MOTION_CMD_RESET_TIMESTAMP;	// Cmd
+    public void setFusionType(byte Mode) {
+        byte[] param = new byte[1];
 
-        pkbuf[2] = crc8(pkbuf, pkbuf.length);
-        mCtrlChar.setValue(pkbuf);
-        mBleGatt.writeCharacteristic(mCtrlChar);
+        param[0] = Mode;
 
-        //device.writeValue(NSData(bytes: UnsafeMutablePointer<Void>(pkbuf), length: 20), forCharacteristic: ctrlChar, type: CBCharacteristicWriteType.WithoutResponse)
+        sendCommand(NEBLINA_SUBSYSTEM_FUSION, NEBLINA_COMMAND_FUSION_FUSION_TYPE, param.length, param);
     }
 
     public void recordTrajectory(boolean Enable)
     {
-        if (isDeviceReady() == false) {
-            return;
-        }
-
-        byte[] pkbuf = new byte[20];
-
-        pkbuf[0] = ((NEB_CTRL_PKTYPE_CMD << 5) | NEB_CTRL_SUBSYS_MOTION_ENG); //0x41
-        pkbuf[1] = 16;//UInt8(sizeof(Fusion_DataPacket_t))
-        pkbuf[2] = (byte)0xff;
-        pkbuf[3] = MOTION_CMD_TRAJECTORY_RECORD;	// Cmd
+        byte[] param = new byte[1];
 
         if (Enable == true)
         {
-            pkbuf[8] = 1;
+            param[0] = 1;
         }
-        else
+		else
         {
-            pkbuf[8] = 0;
+            param[0] = 0;
         }
 
-        pkbuf[2] = crc8(pkbuf, pkbuf.length);
-        mCtrlChar.setValue(pkbuf);
-        mBleGatt.writeCharacteristic(mCtrlChar);
-
-        //device.writeValue(NSData(bytes: UnsafeMutablePointer<Void>(pkbuf), length: 20), forCharacteristic: ctrlChar, type: CBCharacteristicWriteType.WithoutResponse)
+        sendCommand(NEBLINA_SUBSYSTEM_FUSION, NEBLINA_COMMAND_FUSION_TRAJECTORY_RECORD, param.length, param);
     }
 
+    public void streamTrajectoryInfo(boolean Enable)
+    {
+        byte[] param = new byte[1];
+
+        if (Enable == true)
+        {
+            param[0] = 1;
+        }
+		else
+        {
+            param[0] = 0;
+        }
+
+        sendCommand(NEBLINA_SUBSYSTEM_FUSION, NEBLINA_COMMAND_FUSION_TRAJECTORY_INFO_STREAM, param.length, param);
+    }
+
+    public void streamPedometer(boolean Enable)
+    {
+        byte[] param = new byte[1];
+
+        if (Enable == true)
+        {
+            param[0] = 1;
+        }
+		else
+        {
+            param[0] = 0;
+        }
+
+        sendCommand(NEBLINA_SUBSYSTEM_FUSION, NEBLINA_COMMAND_FUSION_PEDOMETER_STREAM, param.length, param);
+    }
+
+    public void streamSittingStanding(boolean Enable) {
+        byte[] param = new byte[1];
+
+        if (Enable == true)
+        {
+            param[0] = 1;
+        }
+		else
+        {
+            param[0] = 0;
+        }
+
+        sendCommand(NEBLINA_SUBSYSTEM_FUSION, NEBLINA_COMMAND_FUSION_SITTING_STANDING_STREAM, param.length, param);
+    }
+
+    public void lockHeadingReference() {
+        sendCommand(NEBLINA_SUBSYSTEM_FUSION, NEBLINA_COMMAND_FUSION_LOCK_HEADING_REFERENCE, 0, null);
+    }
+
+    public void streamFingerGesture(boolean Enable) {
+        byte[] param = new byte[1];
+
+        if (Enable == true)
+        {
+            param[0] = 1;
+        }
+		else
+        {
+            param[0] = 0;
+        }
+
+        sendCommand(NEBLINA_SUBSYSTEM_FUSION, NEBLINA_COMMAND_FUSION_FINGER_GESTURE_STREAM, param.length, param);
+    }
+
+    public void streamRotationInfo(boolean Enable) {
+        byte[] param = new byte[1];
+
+        if (Enable == true)
+        {
+            param[0] = 1;
+        }
+		else
+        {
+            param[0] = 0;
+        }
+
+        sendCommand(NEBLINA_SUBSYSTEM_FUSION, NEBLINA_COMMAND_FUSION_ROTATION_INFO_STREAM, param.length, param);
+    }
+
+    public void externalHeadingCorrection(short yaw, short error) {
+        byte[] param = new byte[4];
+
+        param[0] = (byte)(yaw & 0xFF);
+        param[1] = (byte)((yaw >> 8) & 0xFF);
+        param[2] = (byte)(error & 0xFF);
+        param[3] = (byte)((error >> 8) & 0xFF);
+
+        sendCommand(NEBLINA_SUBSYSTEM_FUSION, NEBLINA_COMMAND_FUSION_EXTERNAL_HEADING_CORRECTION, param.length, param);
+    }
+
+    public void resetAnalysis() {
+        sendCommand(NEBLINA_SUBSYSTEM_FUSION, NEBLINA_COMMAND_FUSION_ANALYSIS_RESET, 0, null);
+    }
+
+    public void calibrateAnalysis() {
+        sendCommand(NEBLINA_SUBSYSTEM_FUSION, NEBLINA_COMMAND_FUSION_ANALYSIS_CALIBRATE, 0, null);
+    }
+
+    public void createPoseAnalysis(byte id, short[] qtf) {
+        byte[] param = new byte[1 + qtf.length * 2];
+
+        param[0] = id;
+
+        for (int i = 0; i < qtf.length; i++) {
+            param[1 + (i << 1)] = (byte)(qtf[i] & 0xFF);
+            param[2 + (i << 1)] = (byte)((qtf[i] >> 8) & 0xFF);
+        }
+
+        sendCommand(NEBLINA_SUBSYSTEM_FUSION, NEBLINA_COMMAND_FUSION_ANALYSIS_CREATE_POSE, param.length, param);
+    }
+
+    public void setActivePoseAnalysis(byte id) {
+        byte[] param = new byte[1];
+
+        param[0] = id;
+
+        sendCommand(NEBLINA_SUBSYSTEM_FUSION, NEBLINA_COMMAND_FUSION_ANALYSIS_SET_ACTIVE_POSE, param.length, param);
+    }
+
+    public void getActivePoseAnalysis() {
+        sendCommand(NEBLINA_SUBSYSTEM_FUSION, NEBLINA_COMMAND_FUSION_ANALYSIS_GET_ACTIVE_POSE, 0, null);
+    }
+
+    public void streamAnalysis(boolean Enable) {
+        byte[] param = new byte[1];
+
+        if (Enable == true)
+        {
+            param[0] = 1;
+        }
+		else
+        {
+            param[0] = 0;
+        }
+
+        sendCommand(NEBLINA_SUBSYSTEM_FUSION, NEBLINA_COMMAND_FUSION_ANALYSIS_STREAM, param.length, param);
+    }
+
+    public void getPoseAnalysisInfo(byte id) {
+        byte[] param = new byte[1];
+
+        param[0] = id;
+
+        sendCommand(NEBLINA_SUBSYSTEM_FUSION, NEBLINA_COMMAND_FUSION_ANALYSIS_POSE_INFO, param.length, param);
+    }
+
+    public void calibrateForwardPosition() {
+        sendCommand(NEBLINA_SUBSYSTEM_FUSION, NEBLINA_COMMAND_FUSION_CALIBRATE_FORWARD_POSITION, 0, null);
+    }
+
+    public void calibrateDownPosition() {
+        sendCommand(NEBLINA_SUBSYSTEM_FUSION, NEBLINA_COMMAND_FUSION_CALIBRATE_DOWN_POSITION, 0, null);
+    }
+
+    public void streamMotionDirection(boolean Enable) {
+        byte[] param = new byte[1];
+
+        if (Enable == true)
+        {
+            param[0] = 1;
+        }
+		else
+        {
+            param[0] = 0;
+        }
+
+        sendCommand(NEBLINA_SUBSYSTEM_FUSION, NEBLINA_COMMAND_FUSION_MOTION_DIRECTION_STREAM, param.length, param);
+    }
+
+    // ***
     // *** Storage subsystem commands
+    // ***
     public void getSessionCount() {
-        if (isDeviceReady() == false) {
-            return;
-        }
-
-        byte[] pkbuf = new byte[4];
-
-        pkbuf[0] = ((NEB_CTRL_PKTYPE_CMD << 5) | NEB_CTRL_SUBSYS_STORAGE);
-        pkbuf[1] = 0;
-        pkbuf[2] = (byte)0xff;
-        pkbuf[3] = STORAGE_CMD_GET_NB_SESSION; // Cmd
-
-        pkbuf[2] = crc8(pkbuf, pkbuf.length);
-        mCtrlChar.setValue(pkbuf);
-        mBleGatt.writeCharacteristic(mCtrlChar);
-
-        //device.writeValue(NSData(bytes: UnsafeMutablePointer<Void>(pkbuf), length: 20), forCharacteristic: ctrlChar, type: CBCharacteristicWriteType.WithoutResponse)
+        sendCommand(NEBLINA_SUBSYSTEM_RECORDER, NEBLINA_COMMAND_RECORDER_SESSION_COUNT, 0, null);
     }
 
-    public void getSessionInfo(int sessionId) {
-        if (isDeviceReady() == false) {
-            return;
-        }
+    public void getSessionInfo(short sessionId) {
+        byte[] param = new byte[2];
 
-        byte[] pkbuf = new byte[10];
+        param[0] = (byte)(sessionId & 0xFF);
+        param[1] = (byte)((sessionId >> 8) & 0xFF);
 
-        pkbuf[0] = ((NEB_CTRL_PKTYPE_CMD << 5) | NEB_CTRL_SUBSYS_STORAGE);
-        pkbuf[1] = 6;
-        pkbuf[2] = (byte)0xff;
-        pkbuf[3] = STORAGE_CMD_GET_SESSION_INFO; // Cmd
-
-        pkbuf[8] = (byte)(sessionId & 0xff);
-        pkbuf[9] = (byte)((sessionId >> 8) & 0xff);
-
-        pkbuf[2] = crc8(pkbuf, pkbuf.length);
-        mCtrlChar.setValue(pkbuf);
-        mBleGatt.writeCharacteristic(mCtrlChar);
-
-        //device.writeValue(NSData(bytes: UnsafeMutablePointer<Void>(pkbuf), length: 20), forCharacteristic: ctrlChar, type: CBCharacteristicWriteType.WithoutResponse)
+        sendCommand(NEBLINA_SUBSYSTEM_RECORDER, NEBLINA_COMMAND_RECORDER_SESSION_INFO, param.length, param);
     }
 
-    public void eraseStorage(boolean Enable) {
-        if (isDeviceReady() == false) {
-            return;
+    public void eraseStorage(boolean quickErase) {
+        byte[] param = new byte[1];
+
+        if (quickErase == true)
+        {
+            param[0] = 1;
         }
+		else
+        {
+            param[0] = 0;
+        }
+        sendCommand(NEBLINA_SUBSYSTEM_RECORDER, NEBLINA_COMMAND_RECORDER_ERASE_ALL, param.length, param);
 
-        byte[] pkbuf = new byte[9];
+    }
 
-        pkbuf[0] = ((NEB_CTRL_PKTYPE_CMD << 5) | NEB_CTRL_SUBSYS_STORAGE); //0x41
-        pkbuf[1] = 5;
-        pkbuf[2] = (byte)0xff;
-        pkbuf[3] = STORAGE_CMD_ERASE; // Cmd
+    public void sessionPlayback(boolean Enable, short sessionId) {
+        byte[] param = new byte[3];
 
         if (Enable == true)
         {
-            pkbuf[8] = 1;
+            param[0] = 1;
         }
-        else
+		else
         {
-            pkbuf[8] = 0;
+            param[0] = 0;
         }
 
-        pkbuf[2] = crc8(pkbuf, pkbuf.length);
-        mCtrlChar.setValue(pkbuf);
-        mBleGatt.writeCharacteristic(mCtrlChar);
+        param[1] = (byte)(sessionId & 0xff);
+        param[2] = (byte)((sessionId >> 8) & 0xff);
 
-        //device.writeValue(NSData(bytes: UnsafeMutablePointer<Void>(pkbuf), length: 20), forCharacteristic: ctrlChar, type: CBCharacteristicWriteType.WithoutResponse)
-
-    }
-
-    public void sessionPlayback(boolean Enable, int sessionId) {
-        if (isDeviceReady() == false) {
-            return;
-        }
-
-        byte[] pkbuf = new byte[11];
-
-        pkbuf[0] = ((NEB_CTRL_PKTYPE_CMD << 5) | NEB_CTRL_SUBSYS_STORAGE);
-        pkbuf[1] = 7;
-        pkbuf[2] = (byte)0xff;
-        pkbuf[3] = STORAGE_CMD_PLAY; // Cmd
-
-        if (Enable == true)
-        {
-            pkbuf[8] = 1;
-        }
-        else
-        {
-            pkbuf[8] = 0;
-        }
-
-        pkbuf[9] = (byte)(sessionId & 0xff);
-        pkbuf[10] = (byte)((sessionId >> 8) & 0xff);
-
-        pkbuf[2] = crc8(pkbuf, pkbuf.length);
-        mCtrlChar.setValue(pkbuf);
-        mBleGatt.writeCharacteristic(mCtrlChar);
-
-        //device.writeValue(NSData(bytes: UnsafeMutablePointer<Void>(pkbuf), length: 20), forCharacteristic: ctrlChar, type: CBCharacteristicWriteType.WithoutResponse)
+        sendCommand(NEBLINA_SUBSYSTEM_RECORDER, NEBLINA_COMMAND_RECORDER_PLAYBACK, param.length, param);
     }
 
     public void sessionRecord(boolean Enable) {
-        if (isDeviceReady() == false) {
-            return;
-        }
-
-        byte[] pkbuf = new byte[9];
-
-        pkbuf[0] = ((NEB_CTRL_PKTYPE_CMD << 5) | NEB_CTRL_SUBSYS_STORAGE); //0x41
-        pkbuf[1] = 5;
-        pkbuf[2] = (byte)0xff;
-        pkbuf[3] = STORAGE_CMD_RECORD;	// Cmd
+        byte[] param = new byte[1];
 
         if (Enable == true)
         {
-            pkbuf[8] = 1;
+            param[0] = 1;
+        }
+		else
+        {
+            param[0] = 0;
+        }
+
+        sendCommand(NEBLINA_SUBSYSTEM_RECORDER, NEBLINA_COMMAND_RECORDER_RECORD, param.length, param);
+    }
+
+    public void sessionRead(short SessionId, short Len, int Offset) {
+        byte[] param = new byte[8];
+
+
+        // Command parameter
+        param[0] = (byte)(SessionId & 0xFF);
+        param[1] = (byte)((SessionId >> 8) & 0xFF);
+        param[2] = (byte)(Len & 0xFF);
+        param[3] = (byte)((Len >> 8) & 0xFF);
+        param[4] = (byte)(Offset & 0xFF);
+        param[5] = (byte)((Offset >> 8) & 0xFF);
+        param[6] = (byte)((Offset >> 16) & 0xFF);
+        param[7] = (byte)((Offset >> 24) & 0xFF);
+
+        sendCommand(NEBLINA_SUBSYSTEM_RECORDER, NEBLINA_COMMAND_RECORDER_SESSION_READ, param.length, param);
+    }
+
+    public void sessionDownload(boolean Start, short SessionId, short Len, int Offset) {
+        byte[] param = new byte[9];
+
+        // Command parameter
+        if (Start == true) {
+            param[0] = 1;
+        }
+		else {
+            param[0] = 0;
+        }
+        param[1] = (byte)(SessionId & 0xFF);
+        param[2] = (byte)((SessionId >> 8) & 0xFF);
+        param[3] = (byte)(Len & 0xFF);
+        param[4] = (byte)((Len >> 8) & 0xFF);
+        param[5] = (byte)(Offset & 0xFF);
+        param[6] = (byte)((Offset >> 8) & 0xFF);
+        param[7] = (byte)((Offset >> 16) & 0xFF);
+        param[8] = (byte)((Offset >> 24) & 0xFF);
+
+        sendCommand(NEBLINA_SUBSYSTEM_RECORDER, NEBLINA_COMMAND_RECORDER_SESSION_DOWNLOAD, param.length, param);
+    }
+
+    // ***
+    // *** Sensor subsystem commands
+    // ***
+    public void sensorSetDownsample(short stream, short factor) {
+        byte[] param = new byte[4];
+
+        param[0] = (byte)(stream & 0xFF);
+        param[1] = (byte)(stream >> 8);
+        param[2] = (byte)(factor & 0xFF);
+        param[3] = (byte)(factor >> 8);
+
+        sendCommand(NEBLINA_SUBSYSTEM_SENSOR, NEBLINA_COMMAND_SENSOR_SET_DOWNSAMPLE, param.length, param);
+    }
+
+    public void sensorSetRange(short type, short range) {
+        byte[] param = new byte[4];
+
+        param[0] = (byte)(type & 0xFF);
+        param[1] = (byte)(type >> 8);
+        param[2] = (byte)(range & 0xFF);
+        param[3] = (byte)(range >> 8);
+
+        sendCommand(NEBLINA_SUBSYSTEM_SENSOR, NEBLINA_COMMAND_SENSOR_SET_RANGE, param.length, param);
+    }
+
+    public void sensorSetRate(short type, short rate) {
+        byte[] param = new byte[4];
+
+        param[0] = (byte)(type & 0xFF);
+        param[1] = (byte)(type >> 8);
+        param[2] = (byte)(rate & 0xFF);
+        param[3] = (byte)(rate >> 8);
+
+        sendCommand(NEBLINA_SUBSYSTEM_SENSOR, NEBLINA_COMMAND_SENSOR_SET_RATE, param.length, param);
+    }
+
+    public void sensorGetDownsample(byte streamId) {
+        byte[] param = new byte[1];
+
+        param[0] = streamId;
+
+        sendCommand(NEBLINA_SUBSYSTEM_SENSOR, NEBLINA_COMMAND_SENSOR_GET_DOWNSAMPLE, param.length, param);
+    }
+
+    public void sensorGetRange(byte type) {
+        byte[] param = new byte[1];
+
+        param[0] = type;
+
+        sendCommand(NEBLINA_SUBSYSTEM_SENSOR, NEBLINA_COMMAND_SENSOR_GET_RANGE, param.length, param);
+    }
+
+    public void sensorGetRate(byte type) {
+        byte[] param = new byte[1];
+
+        param[0] = type;
+
+        sendCommand(NEBLINA_SUBSYSTEM_SENSOR, NEBLINA_COMMAND_SENSOR_GET_RATE, param.length, param);
+    }
+
+    public void sensorStreamAccelData(boolean Enable) {
+        byte[] param = new byte[1];
+
+        if (Enable == true)
+        {
+            param[0] = 1;
+        }
+		else
+        {
+            param[0] = 0;
+        }
+
+        sendCommand(NEBLINA_SUBSYSTEM_SENSOR, NEBLINA_COMMAND_SENSOR_ACCELEROMETER_STREAM, param.length, param);
+    }
+
+    public void sensorStreamGyroData(boolean Enable) {
+        byte[] param = new byte[1];
+
+        if (Enable == true)
+        {
+            param[0] = 1;
+        }
+		else
+        {
+            param[0] = 0;
+        }
+
+        sendCommand(NEBLINA_SUBSYSTEM_SENSOR, NEBLINA_COMMAND_SENSOR_GYROSCOPE_STREAM, param.length, param);
+    }
+
+    public void sensorStreamHumidityData(boolean Enable) {
+        byte[] param = new byte[1];
+
+        if (Enable == true)
+        {
+            param[0] = 1;
+        }
+		else
+        {
+            param[0] = 0;
+        }
+
+        sendCommand(NEBLINA_SUBSYSTEM_SENSOR, NEBLINA_COMMAND_SENSOR_HUMIDITY_STREAM, param.length, param);
+    }
+
+    public void sensorStreamMagData(boolean Enable) {
+        byte[] param = new byte[1];
+
+        if (Enable == true)
+        {
+            param[0] = 1;
+        }
+		else
+        {
+            param[0] = 0;
+        }
+
+        sendCommand(NEBLINA_SUBSYSTEM_SENSOR, NEBLINA_COMMAND_SENSOR_MAGNETOMETER_STREAM, param.length, param);
+    }
+
+    public void sensorStreamPressureData(boolean Enable) {
+        byte[] param = new byte[1];
+
+        if (Enable == true)
+        {
+            param[0] = 1;
+        }
+		else
+        {
+            param[0] = 0;
+        }
+
+        sendCommand(NEBLINA_SUBSYSTEM_SENSOR, NEBLINA_COMMAND_SENSOR_PRESSURE_STREAM, param.length, param);
+    }
+
+    public void sensorStreamTemperatureData(boolean Enable) {
+        byte[] param = new byte[1];
+
+        if (Enable == true)
+        {
+            param[0] = 1;
+        }
+		else
+        {
+            param[0] = 0;
+        }
+
+        sendCommand(NEBLINA_SUBSYSTEM_SENSOR, NEBLINA_COMMAND_SENSOR_TEMPERATURE_STREAM, param.length, param);
+    }
+
+    public void sensorStreamAccelGyroData(boolean Enable) {
+        byte[] param = new byte[1];
+
+        if (Enable == true)
+        {
+            param[0] = 1;
         }
         else
         {
-            pkbuf[8] = 0;
+            param[0] = 0;
         }
 
-        pkbuf[2] = crc8(pkbuf, pkbuf.length);
-        mCtrlChar.setValue(pkbuf);
-        mBleGatt.writeCharacteristic(mCtrlChar);
+        sendCommand(NEBLINA_SUBSYSTEM_SENSOR, NEBLINA_COMMAND_SENSOR_ACCELEROMETER_GYROSCOPE_STREAM, param.length, param);
+    }
 
-        //device.writeValue(NSData(bytes: UnsafeMutablePointer<Void>(pkbuf), length: 20), forCharacteristic: ctrlChar, type: CBCharacteristicWriteType.WithoutResponse)
+    public void sensorStreamAccelMagData(boolean Enable) {
+        byte[] param = new byte[1];
+
+        if (Enable == true)
+        {
+            param[0] = 1;
+        }
+        else
+        {
+            param[0] = 0;
+        }
+
+        sendCommand(NEBLINA_SUBSYSTEM_SENSOR, NEBLINA_COMMAND_SENSOR_ACCELEROMETER_MAGNETOMETER_STREAM, param.length, param);
     }
 
     @Override
@@ -1082,6 +1049,7 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
             return new Neblina[size];
         }
     };
+
     private Neblina(Parcel in) {
         Nebdev = (BluetoothDevice) in.readValue(null);
         DevId = in.readLong();
