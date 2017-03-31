@@ -46,21 +46,20 @@ public class NebDeviceDetailFragment extends Fragment implements NeblinaDelegate
     public static final NebCmdItem[] cmdList = new NebCmdItem[] {
         new NebCmdItem((byte)0xff, (byte)0x01, "Stream/Record", 2, "Start"),
         new NebCmdItem((byte)0xff, (byte)0x0, "Stream/Record", 2, "Stop"),
-        new NebCmdItem(Neblina.NEB_CTRL_SUBSYS_DEBUG, Neblina.DEBUG_CMD_SET_DATAPORT, "BLE Data Port", 1, ""),
-        new NebCmdItem(Neblina.NEB_CTRL_SUBSYS_DEBUG, Neblina.DEBUG_CMD_SET_DATAPORT, "BLE Data Port", 1, ""),
-        new NebCmdItem(Neblina.NEB_CTRL_SUBSYS_DEBUG, Neblina.DEBUG_CMD_SET_DATAPORT, "UART Data Port", 1, ""),
-        new NebCmdItem(Neblina.NEB_CTRL_SUBSYS_MOTION_ENG, Neblina.MOTION_CMD_SET_FUSION_TYPE, "Fusion 9 axis", 1, ""),
-        new NebCmdItem(Neblina.NEB_CTRL_SUBSYS_MOTION_ENG, Neblina.MOTION_CMD_QUATERNION, "Quaternion Stream", 1, ""),
-        new NebCmdItem(Neblina.NEB_CTRL_SUBSYS_MOTION_ENG, Neblina.MOTION_CMD_MAG_DATA, "Mag Stream", 1, ""),
-        new NebCmdItem(Neblina.NEB_CTRL_SUBSYS_MOTION_ENG, Neblina.MOTION_CMD_LOCK_HEADING_REF, "Lock Heading Ref.", 1, ""),
-        new NebCmdItem(Neblina.NEB_CTRL_SUBSYS_STORAGE, Neblina.STORAGE_CMD_ERASE, "Flash Erase All", 1, ""),
-        new NebCmdItem(Neblina.NEB_CTRL_SUBSYS_STORAGE, Neblina.STORAGE_CMD_RECORD, "Flash Record", 1, ""),
-        new NebCmdItem(Neblina.NEB_CTRL_SUBSYS_STORAGE, Neblina.STORAGE_CMD_PLAY, "Flash Playback", 1, ""),
-        new NebCmdItem(Neblina.NEB_CTRL_SUBSYS_LED, Neblina.LED_CMD_SET_VALUE, "Set LED0 level", 3, ""),
-        new NebCmdItem(Neblina.NEB_CTRL_SUBSYS_LED, Neblina.LED_CMD_SET_VALUE, "Set LED1 level", 3, ""),
-        new NebCmdItem(Neblina.NEB_CTRL_SUBSYS_LED, Neblina.LED_CMD_SET_VALUE, "Set LED2", 1, ""),
-        new NebCmdItem(Neblina.NEB_CTRL_SUBSYS_EEPROM, Neblina.EEPROM_CMD_READ, "EEPROM Read", 2, "Read"),
-        new NebCmdItem(Neblina.NEB_CTRL_SUBSYS_POWERMGMT, Neblina.POWERMGMT_CMD_SET_CHARGE_CURRENT, "Charge Current in mA", 3, ""),
+        new NebCmdItem(Neblina.NEBLINA_SUBSYSTEM_GENERAL, Neblina.NEBLINA_COMMAND_GENERAL_INTERFACE_STATE, "BLE Data Port", 1, ""),
+        new NebCmdItem(Neblina.NEBLINA_SUBSYSTEM_GENERAL, Neblina.NEBLINA_COMMAND_GENERAL_INTERFACE_STATE, "UART Data Port", 1, ""),
+        new NebCmdItem(Neblina.NEBLINA_SUBSYSTEM_FUSION, Neblina.NEBLINA_COMMAND_FUSION_FUSION_TYPE, "Fusion 9 axis", 1, ""),
+        new NebCmdItem(Neblina.NEBLINA_SUBSYSTEM_FUSION, Neblina.NEBLINA_COMMAND_FUSION_QUATERNION_STREAM, "Quaternion Stream", 1, ""),
+        new NebCmdItem(Neblina.NEBLINA_SUBSYSTEM_SENSOR, Neblina.NEBLINA_COMMAND_SENSOR_MAGNETOMETER_STREAM, "Mag Stream", 1, ""),
+        new NebCmdItem(Neblina.NEBLINA_SUBSYSTEM_FUSION, Neblina.NEBLINA_COMMAND_FUSION_LOCK_HEADING_REFERENCE, "Lock Heading Ref.", 1, ""),
+        new NebCmdItem(Neblina.NEBLINA_SUBSYSTEM_RECORDER, Neblina.NEBLINA_COMMAND_RECORDER_ERASE_ALL, "Flash Erase All", 1, ""),
+        new NebCmdItem(Neblina.NEBLINA_SUBSYSTEM_RECORDER, Neblina.NEBLINA_COMMAND_RECORDER_RECORD, "Flash Record", 1, ""),
+        new NebCmdItem(Neblina.NEBLINA_SUBSYSTEM_RECORDER, Neblina.NEBLINA_COMMAND_RECORDER_PLAYBACK, "Flash Playback", 1, ""),
+        new NebCmdItem(Neblina.NEBLINA_SUBSYSTEM_LED, Neblina.NEBLINA_COMMAND_LED_STATE, "Set LED0 level", 3, ""),
+        new NebCmdItem(Neblina.NEBLINA_SUBSYSTEM_LED, Neblina.NEBLINA_COMMAND_LED_STATE, "Set LED1 level", 3, ""),
+        new NebCmdItem(Neblina.NEBLINA_SUBSYSTEM_LED, Neblina.NEBLINA_COMMAND_LED_STATE, "Set LED2", 1, ""),
+        new NebCmdItem(Neblina.NEBLINA_SUBSYSTEM_EEPROM, Neblina.NEBLINA_COMMAND_EEPROM_READ, "EEPROM Read", 2, "Read"),
+        new NebCmdItem(Neblina.NEBLINA_SUBSYSTEM_POWER, Neblina.NEBLINA_COMMAND_POWER_CHARGE_CURRENT, "Charge Current in mA", 3, ""),
         new NebCmdItem((byte)0xf, (byte)0, "Motion data stream", 1, ""),
         new NebCmdItem((byte)0xf, (byte)1, "Heading", 1, "")
     };
@@ -126,9 +125,7 @@ public class NebDeviceDetailFragment extends Fragment implements NeblinaDelegate
                 @Override
                 public void onScrollStateChanged(AbsListView absListView, int scrollState) {
                     if (scrollState == AbsListView.OnScrollListener.SCROLL_STATE_IDLE) {
-                        mNedDev.getMotionStatus();
-                        mNedDev.getDataPortState();
-                        mNedDev.getLed();
+                        mNedDev.getSystemStatus();
                         mNedDev.getFirmwareVersion();
                     }
                 }
@@ -145,20 +142,15 @@ public class NebDeviceDetailFragment extends Fragment implements NeblinaDelegate
 
     //
     public void onSwitchButtonChanged(CompoundButton button, boolean isChecked) {
-        int idx = (int) button.getTag();
+        int idx = (Integer) button.getTag();
         if (idx < 0 && idx > cmdList.length)
             return;
 
         switch (cmdList[idx].mSubSysId) {
-            case NEB_CTRL_SUBSYS_DEBUG:
+            case NEBLINA_SUBSYSTEM_GENERAL:
                 switch (cmdList[idx].mCmdId)
                 {
-                    case DEBUG_CMD_SET_INTERFACE:
-                        //mNedDev.setInterface(isChecked == true ? 1);
-                        break;
-                    case DEBUG_CMD_DUMP_DATA:
-                        break;
-                    case DEBUG_CMD_SET_DATAPORT:
+                    case NEBLINA_COMMAND_GENERAL_INTERFACE_STATE:
                         if (isChecked)
                             mNedDev.setDataPort(idx, (byte) 1);
                         else
@@ -169,26 +161,58 @@ public class NebDeviceDetailFragment extends Fragment implements NeblinaDelegate
                 }
                 break;
 
-            case NEB_CTRL_SUBSYS_MOTION_ENG:
+            case NEBLINA_SUBSYSTEM_FUSION:
                 switch (cmdList[idx].mCmdId) {
-                    case MOTION_CMD_QUATERNION:
+                    case NEBLINA_COMMAND_FUSION_RATE:
+                        break;
+                    case NEBLINA_COMMAND_FUSION_DOWNSAMPLE:
+                        break;
+                    case NEBLINA_COMMAND_FUSION_MOTION_STATE_STREAM:
+                        mNedDev.streamMotionState(isChecked);
+                        break;
+                    case NEBLINA_COMMAND_FUSION_QUATERNION_STREAM:
                         mNedDev.streamQuaternion(isChecked);
+                        break;
+                    case NEBLINA_COMMAND_FUSION_EULER_ANGLE_STREAM:
+                        mNedDev.streamEulerAngle(isChecked);
+                        break;
+                    case NEBLINA_COMMAND_FUSION_EXTERNAL_FORCE_STREAM:
+                        mNedDev.streamExternalForce(isChecked);
+                        break;
+                    case NEBLINA_COMMAND_FUSION_FUSION_TYPE:
+                        break;
+                    case NEBLINA_COMMAND_FUSION_TRAJECTORY_RECORD:
+                        break;
+                    case NEBLINA_COMMAND_FUSION_TRAJECTORY_INFO_STREAM:
+                        break;
+                    case NEBLINA_COMMAND_FUSION_PEDOMETER_STREAM:
+                        break;
+                    case NEBLINA_COMMAND_FUSION_SITTING_STANDING_STREAM:
+                        break;
+                    case NEBLINA_COMMAND_FUSION_LOCK_HEADING_REFERENCE:
+                        break;
+                    case NEBLINA_COMMAND_FUSION_FINGER_GESTURE_STREAM:
+                        break;
+                    case NEBLINA_COMMAND_FUSION_ROTATION_INFO_STREAM:
+                        break;
+                    case NEBLINA_COMMAND_FUSION_EXTERNAL_HEADING_CORRECTION:
+                        break;
                 }
                 break;
         }
     }
 
     public void onButtonClick(View button) {
-        int idx = (int) button.getTag();
+        int idx = (Integer) button.getTag();
         if (idx < 0 && idx > cmdList.length)
             return;
         switch (cmdList[idx].mSubSysId) {
-            case NEB_CTRL_SUBSYS_EEPROM:
+            case NEBLINA_SUBSYSTEM_EEPROM:
                 switch (cmdList[idx].mCmdId) {
-                    case EEPROM_CMD_READ:
-                        mNedDev.eepromRead(0);
+                    case NEBLINA_COMMAND_EEPROM_READ:
+                        mNedDev.eepromRead((short)0);
                         break;
-                    case EEPROM_CMD_WRITE:
+                    case NEBLINA_COMMAND_EEPROM_WRITE:
                         break;
                 }
                 break;
@@ -196,12 +220,12 @@ public class NebDeviceDetailFragment extends Fragment implements NeblinaDelegate
                 if (cmdList[idx].mCmdId==1) //start stream/record
                 {
                     mNedDev.streamQuaternion(true);
-                    mNedDev.streamIMU(true);
+                    //mNedDev.streamIMU(true);
                     mNedDev.sessionRecord(true);
                 }
                 else //stop stream/record
                 {
-                    mNedDev.streamDisableAll();
+                    mNedDev.disableStreaming();
                     mNedDev.sessionRecord(false);
                 }
                 break;
@@ -209,18 +233,18 @@ public class NebDeviceDetailFragment extends Fragment implements NeblinaDelegate
     }
 
     // MARK : NeblinaDelegate
-    public void didConnectNeblina() {
-        mNedDev.getMotionStatus();
-        mNedDev.getDataPortState();
+    public void didConnectNeblina(Neblina sender) {
+        mNedDev.getSystemStatus();
         mNedDev.getLed();
         mNedDev.getFirmwareVersion();
     }
-    public void didReceiveRSSI(int rssi) {
+    public void didReceiveRSSI(Neblina sender, int rssi) {
 
     }
-    public void didReceiveFusionData(int type , byte[] data, boolean errFlag) {
-        switch (type) {
-            case MOTION_CMD_QUATERNION:
+
+    public void didReceiveFusionData(Neblina sender, int cmdRspId , byte[] data, int datalen, boolean errFlag) {
+        switch (cmdRspId) {
+            case NEBLINA_COMMAND_FUSION_QUATERNION_STREAM:
 
 
                 String s = String.format("%d, %d, %d", data[4], data[6], data[8]);
@@ -230,22 +254,22 @@ public class NebDeviceDetailFragment extends Fragment implements NeblinaDelegate
                 break;
         }
     }
-    public void didReceiveDebugData(int type, byte[] data, int dataLen, boolean errFlag) {
+    public void didReceiveGeneralData(Neblina sender, int cmdRspId, byte[] data, int dataLen, boolean errFlag) {
         NebListAdapter adapter = (NebListAdapter) mCmdListView.getAdapter();
 
-        switch (type) {
-            case DEBUG_CMD_MOTENGINE_RECORDER_STATUS:
+        switch (cmdRspId) {
+            case NEBLINA_COMMAND_GENERAL_SYSTEM_STATUS:
                 {
                     switch (data[8]) {
                         case 1:    // Playback
                         {
-                            int i = getCmdIdx(NEB_CTRL_SUBSYS_STORAGE, STORAGE_CMD_RECORD);
+                            int i = getCmdIdx(NEBLINA_SUBSYSTEM_RECORDER, NEBLINA_COMMAND_RECORDER_RECORD);
                             Switch v = (Switch) mCmdListView.findViewWithTag(i);
                             if (v != null) {
                                 v.setChecked(false);
                                 v.getRootView().postInvalidate();
                             }
-                            i = getCmdIdx(NEB_CTRL_SUBSYS_STORAGE, STORAGE_CMD_PLAY);
+                            i = getCmdIdx(NEBLINA_SUBSYSTEM_RECORDER, NEBLINA_COMMAND_RECORDER_PLAYBACK);
                             v = (Switch) mCmdListView.findViewWithTag(i);
                             if (v != null) {
                                 v.setChecked(true);
@@ -255,13 +279,13 @@ public class NebDeviceDetailFragment extends Fragment implements NeblinaDelegate
                         break;
                         case 2:    // Recording
                         {
-                            int i = getCmdIdx(NEB_CTRL_SUBSYS_STORAGE, STORAGE_CMD_PLAY);
+                            int i = getCmdIdx(NEBLINA_SUBSYSTEM_RECORDER, NEBLINA_COMMAND_RECORDER_PLAYBACK);
                             Switch v = (Switch) mCmdListView.findViewWithTag(i);
                             if (v != null) {
                                 v.setChecked(false);
                                 v.getRootView().postInvalidate();
                             }
-                            i = getCmdIdx(NEB_CTRL_SUBSYS_STORAGE, STORAGE_CMD_RECORD);
+                            i = getCmdIdx(NEBLINA_SUBSYSTEM_RECORDER, NEBLINA_COMMAND_RECORDER_RECORD);
                             v = (Switch) mCmdListView.findViewWithTag(i);
                             if (v != null) {
                                 v.setChecked(true);
@@ -270,13 +294,13 @@ public class NebDeviceDetailFragment extends Fragment implements NeblinaDelegate
                         }
                         break;
                         default: {
-                            int i = getCmdIdx(NEB_CTRL_SUBSYS_STORAGE, STORAGE_CMD_RECORD);
+                            int i = getCmdIdx(NEBLINA_SUBSYSTEM_RECORDER, NEBLINA_COMMAND_RECORDER_RECORD);
                             Switch v = (Switch) mCmdListView.findViewWithTag(i);
                             if (v != null) {
                                 v.setChecked(false);
                                 v.getRootView().postInvalidate();
                             }
-                            i = getCmdIdx(NEB_CTRL_SUBSYS_STORAGE, STORAGE_CMD_PLAY);
+                            i = getCmdIdx(NEBLINA_SUBSYSTEM_RECORDER, NEBLINA_COMMAND_RECORDER_PLAYBACK);
                             v = (Switch) mCmdListView.findViewWithTag(i);
                             if (v != null) {
                                 v.setChecked(false);
@@ -285,14 +309,14 @@ public class NebDeviceDetailFragment extends Fragment implements NeblinaDelegate
                         }
                         break;
                     }
-                    int i = getCmdIdx(NEB_CTRL_SUBSYS_MOTION_ENG, MOTION_CMD_QUATERNION);
+                    int i = getCmdIdx(NEBLINA_SUBSYSTEM_FUSION, NEBLINA_COMMAND_FUSION_QUATERNION_STREAM);
                     Switch v = (Switch) mCmdListView.findViewWithTag(i);
 
                     if (v != null) {
                         v.setChecked(((data[4] & 8) >> 3) != 0);
                         v.getRootView().postInvalidate();
                     }
-                    i = getCmdIdx(NEB_CTRL_SUBSYS_MOTION_ENG, MOTION_CMD_MAG_DATA);
+                    i = getCmdIdx(NEBLINA_SUBSYSTEM_SENSOR, NEBLINA_COMMAND_SENSOR_MAGNETOMETER_STREAM);
                     v = (Switch) mCmdListView.findViewWithTag(i);
                     if (v != null) {
                         v.setChecked(((data[4] & 0x80) >> 7) != 0);
@@ -300,7 +324,7 @@ public class NebDeviceDetailFragment extends Fragment implements NeblinaDelegate
                     }
                 }
                 break;
-            case DEBUG_CMD_GET_FW_VERSION:
+            case NEBLINA_COMMAND_GENERAL_FIRMWARE_VERSION:
                 {
                     String s = String.format("API:%d, FEN:%d.%d.%d, BLE:%d.%d.%d", data[0], data[1], data[2], data[3], data[4], data[5], data[6]);
 
@@ -308,17 +332,8 @@ public class NebDeviceDetailFragment extends Fragment implements NeblinaDelegate
                     mTextLabel2.getRootView().postInvalidate();
                 }
                 break;
-            case DEBUG_CMD_DUMP_DATA:
-                {
-                    String s = String.format("%02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x",
-                            data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7], data[8], data[9],
-                            data[10], data[11], data[12], data[13], data[14], data[15]);
-                    mTextLabel1.setText(s);
-                    mTextLabel1.getRootView().postInvalidate();
-                }
-                break;
-            case DEBUG_CMD_GET_DATAPORT:
-                int i = getCmdIdx(NEB_CTRL_SUBSYS_DEBUG, DEBUG_CMD_SET_DATAPORT);
+            case NEBLINA_COMMAND_GENERAL_INTERFACE_STATUS:
+                int i = getCmdIdx(NEBLINA_SUBSYSTEM_GENERAL, NEBLINA_COMMAND_GENERAL_INTERFACE_STATE);
                 Switch v = (Switch) mCmdListView.findViewWithTag(i);
                 if (v != null) {
                     v.setChecked(data[0] != 0);
@@ -333,16 +348,31 @@ public class NebDeviceDetailFragment extends Fragment implements NeblinaDelegate
         }
 
     }
-    public void didReceivePmgntData(int type, byte[] data, int dataLen, boolean errFlag) {
+    public void didReceivePmgntData(Neblina sender, int type, byte[] data, int dataLen, boolean errFlag) {
 
     }
-    public void didReceiveStorageData(int type, byte[] data, int dataLen, boolean errFlag) {
+    public void didReceiveRecorderData(Neblina sender, int type, byte[] data, int dataLen, boolean errFlag) {
 
     }
-    public void didReceiveEepromData(int type, byte[] data, int dataLen, boolean errFlag) {
+    public void didReceiveEepromData(Neblina sender, int type, byte[] data, int dataLen, boolean errFlag) {
 
     }
-    public void didReceiveLedData(int type, byte[] data, int dataLen, boolean errFlag) {
+    public void didReceiveLedData(Neblina sender, int type, byte[] data, int dataLen, boolean errFlag) {
         
+    }
+    public void didReceiveDebugData(Neblina sender, int cmdRspId, byte[] data, int dataLen, boolean errFlag) {
+        switch (cmdRspId) {
+            case NEBLINA_COMMAND_DEBUG_DUMP_DATA: {
+                String s = String.format("%02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x",
+                        data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7], data[8], data[9],
+                        data[10], data[11], data[12], data[13], data[14], data[15]);
+                mTextLabel1.setText(s);
+                mTextLabel1.getRootView().postInvalidate();
+            }
+            break;
+        }
+    }
+    public void didReceiveSensorData(Neblina sender, int type, byte[] data, int dataLen, boolean errFlag) {
+
     }
 }
