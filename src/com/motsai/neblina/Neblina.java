@@ -7,20 +7,35 @@ import android.bluetooth.BluetoothProfile;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
+import android.bluetooth.*;
 import android.content.Context;
 import android.content.Intent;
+import android.content.BroadcastReceiver;
+import android.content.IntentFilter;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.os.SystemClock;
+import android.util.Log;
+import android.app.Service;
+import android.widget.AdapterView;
 
 import java.io.Serializable;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Queue;
 import java.util.UUID;
 import java.lang.String;
+
+
+import static android.bluetooth.BluetoothGattCharacteristic.*;
+import static android.content.Context.*;
+import static java.lang.Thread.yield;
 
 /**
  * Created by hoanmotsai on 2016-06-10.
  */
+//public class Neblina extends BluetoothGattCallback implements Parcelable {
 public class Neblina extends BluetoothGattCallback implements Parcelable {
     //NEBLINA CUSTOM UUIDs
     public static final UUID NEB_SERVICE_UUID = UUID.fromString("0df9f021-1532-11e5-8960-0002a5d5c51b");
@@ -28,7 +43,7 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
     public static final UUID NEB_CTRLCHAR_UUID = UUID.fromString("0df9f023-1532-11e5-8960-0002a5d5c51b");
 
     // Packet types
-    public static final byte NEBLINA_PACKET_TYPE_RESPONSE		    = 0;		// Data/Response
+    public static final byte NEBLINA_PACKET_TYPE_RESPONSE		    = 0;		// Response
     public static final byte NEBLINA_PACKET_TYPE_ACK		        = 1;		// Ack
     public static final byte NEBLINA_PACKET_TYPE_COMMAND		    = 2;		// Command
     public static final byte NEBLINA_PACKET_TYPE_DATA	            = 3;
@@ -158,13 +173,23 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
     public static final byte DATAPORT_OPEN	= 1;	// Open streaming data port
     public static final byte DATAPORT_CLOSE	= 0;	// Close streaming data port
 
+    //
+    //
+    //
+    public static final byte NEBLINA_INTERFACE_STATUS_BLE = (1 << DATAPORT_BLE);
+    public static final byte NEBLINA_INTERFACE_STATUS_UART = (1 << DATAPORT_UART);
 
 
     BluetoothDevice Nebdev;
+    String Name;
     long DevId;
     BluetoothGatt mBleGatt;
     NeblinaDelegate mDelegate;
     BluetoothGattCharacteristic mCtrlChar;
+    private Boolean mCharWritCompleted = true;
+    Context mCtx = null;
+
+    Queue<byte[]> mCmdQue = new LinkedList<byte[]>();
 
     public void SetDelegate(NeblinaDelegate neblinaDelegate) {
         mDelegate = neblinaDelegate;
@@ -178,26 +203,34 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
 
         for (i = 0; i < Len; i++) {
         //while (i < Len) {
-            e = crc ^ data[i];
-            f = e ^ (e >> 4) ^ (e >> 7);
-            crc = ((f << 1) ^ (f << 4)) & 0xff;
+            e = (crc ^ ((int)data[i] & 0xFF));
+            f = (e ^ (e >> 4) ^ (e >> 7));
+            crc = (((f << 1) ^ (f << 4)) & 0xff);
           //  i += 1;
         }
 
+        Log.i("CRC8 : ", String.valueOf(crc));
         return (byte)crc;
     }
 
     @Override
     public String toString() {
-        return Nebdev.getName() + "_" + Long.toHexString(DevId).toUpperCase();
+        return Name + "_" + Long.toHexString(DevId).toUpperCase();
     }
 
-    public Neblina(long id, BluetoothDevice dev) {
+    public Neblina(String name, long id, BluetoothDevice dev) {
         Nebdev = dev;
+        Name = name;
         DevId = id;
         mDelegate = null;
         mBleGatt = null;
         mCtrlChar = null;
+        mCharWritCompleted = true;
+       // IntentFilter filter;
+       // filter = new IntentFilter("com.motsai.NebCtrlPanel");
+
+        //MyReceiver receiver = new MyReceiver();
+        //registerReceiver(mBroadcastReceiver, filter);
     }
 
     @Override
@@ -219,13 +252,18 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
 
     public boolean Connect(Context ctext) {
         mBleGatt = Nebdev.connectGatt(ctext, false, this);
-
+        mCtx = ctext;
         return mBleGatt != null;
     }
 
     public void Disconnect() {
         mBleGatt.disconnect();
         mBleGatt = null;
+    }
+
+    private void broadcastUpdate(final String action) {
+        final Intent intent = new Intent(action);
+        mCtx.sendBroadcast(intent);
     }
 
     // MARK : **** BluetoothGattCallback
@@ -246,13 +284,85 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
             BluetoothGattService service = gatt.getService(NEB_SERVICE_UUID);
             BluetoothGattCharacteristic data_characteristic = service.getCharacteristic(NEB_DATACHAR_UUID);
             mCtrlChar = service.getCharacteristic(NEB_CTRLCHAR_UUID);
-            gatt.setCharacteristicNotification(data_characteristic, true);
             List<BluetoothGattDescriptor> descriptors = data_characteristic.getDescriptors();
-            BluetoothGattDescriptor descriptor = descriptors.get(0);
-            descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-            mBleGatt.writeDescriptor(descriptor);
+            synchronized (mCharWritCompleted) {
+                mCharWritCompleted = false;
+            }
+            //for (BluetoothGattDescriptor descriptor : data_characteristic.getDescriptors()) {
+                BluetoothGattDescriptor descriptor = descriptors.get(0);
+                descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+                mBleGatt.writeDescriptor(descriptor);
+            //}
+            gatt.setCharacteristicNotification(data_characteristic, true);
+            //descriptor.setValue(BluetoothGattDescriptor.ENABLE_INDICATION_VALUE);
             if (mDelegate != null)
                 mDelegate.didConnectNeblina(this);
+        }
+    }
+
+    /**
+     * Callback indicating the result of a descriptor write operation.
+     *
+     * @param gatt GATT client invoked {@link BluetoothGatt#writeDescriptor}
+     * @param descriptor Descriptor that was writte to the associated
+     *                   remote device.
+     * @param status The result of the write operation
+     *               {@link BluetoothGatt#GATT_SUCCESS} if the operation succeeds.
+     */
+    @Override
+    public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor,
+                                  int status) {
+//        if (mDelegate != null)
+//            mDelegate.didConnectNeblina(this);
+        if (mCmdQue.isEmpty() == false) {
+            byte[] pkbuf = mCmdQue.remove();
+
+            BluetoothGattService service = mBleGatt.getService(NEB_SERVICE_UUID);
+            BluetoothGattCharacteristic lCtrlChar = service.getCharacteristic(NEB_CTRLCHAR_UUID);
+
+            boolean res = lCtrlChar.setValue(pkbuf);
+            Log.i("onCharacteristicWrite - lsetValue", String.valueOf(res));
+            res = mBleGatt.writeCharacteristic(lCtrlChar);
+
+            Log.i("onCharacteristicWrite - lwriteCharacteristic", String.valueOf(res));
+        }
+        else {
+            synchronized (mCharWritCompleted) {
+                mCharWritCompleted = true;
+            }
+        }
+    }
+
+    @Override
+    public void onCharacteristicWrite (BluetoothGatt gatt,
+                                       BluetoothGattCharacteristic characteristic,
+                                       int status) {
+        Log.i("onCharacteristicWrite", String.valueOf(status));
+        if (mCmdQue.isEmpty() == false) {
+            byte[] pkbuf = mCmdQue.remove();
+
+            BluetoothGattService service = mBleGatt.getService(NEB_SERVICE_UUID);
+            BluetoothGattCharacteristic lCtrlChar = service.getCharacteristic(NEB_CTRLCHAR_UUID);
+
+            boolean res = lCtrlChar.setValue(pkbuf);
+            Log.i("onCharacteristicWrite - lsetValue", String.valueOf(res));
+            res = mBleGatt.writeCharacteristic(lCtrlChar);
+
+            Log.i("onCharacteristicWrite - lwriteCharacteristic", String.valueOf(res));
+        }
+        else {
+            synchronized (mCharWritCompleted) {
+                mCharWritCompleted = true;
+            }
+        }
+    }
+    @Override
+    // Result of a characteristic read operation
+    public void onCharacteristicRead(BluetoothGatt gatt,
+                                     BluetoothGattCharacteristic characteristic,
+                                     int status) {
+        if (status == BluetoothGatt.GATT_SUCCESS) {
+           // broadcastUpdate(ACTION_DATA_AVAILABLE, characteristic);
         }
     }
 
@@ -268,6 +378,8 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
         byte[] data = new byte[16];
         boolean errFlag = false;
 
+        Log.i("onCharacteristicChanged", "called");
+
         if (pktype == NEBLINA_PACKET_TYPE_ACK)
             return;
 
@@ -282,31 +394,30 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
         for (int i = 0; i < datalen; i++)
             data[i] = pkt[i+4];
 
-
         switch (subsys) {
             case NEBLINA_SUBSYSTEM_GENERAL:
-                mDelegate.didReceiveGeneralData(this, pkt[3], data, datalen, errFlag);
+                mDelegate.didReceiveGeneralData(this, pktype, pkt[3], data, datalen, errFlag);
                 break;
             case NEBLINA_SUBSYSTEM_FUSION:  // Motion Engine
-                mDelegate.didReceiveFusionData(this, pkt[3], data, datalen, errFlag);
+                mDelegate.didReceiveFusionData(this, pktype, pkt[3], data, datalen, errFlag);
                 break;
             case NEBLINA_SUBSYSTEM_POWER:	// Power management
-                mDelegate.didReceivePmgntData(this, pkt[3], data, datalen, errFlag);
+                mDelegate.didReceivePmgntData(this, pktype, pkt[3], data, datalen, errFlag);
                 break;
             case NEBLINA_SUBSYSTEM_LED:		// LED control
-                mDelegate.didReceiveLedData(this, pkt[3], data, datalen, errFlag);
+                mDelegate.didReceiveLedData(this, pktype, pkt[3], data, datalen, errFlag);
                 break;
             case NEBLINA_SUBSYSTEM_DEBUG:		// Status & logging
-                mDelegate.didReceiveDebugData(this, pkt[3], data, datalen, errFlag);
+                mDelegate.didReceiveDebugData(this, pktype, pkt[3], data, datalen, errFlag);
                 break;
             case NEBLINA_SUBSYSTEM_RECORDER:	//NOR flash memory recorder
-                mDelegate.didReceiveRecorderData(this, pkt[3], data, datalen, errFlag);
+                mDelegate.didReceiveRecorderData(this, pktype, pkt[3], data, datalen, errFlag);
                 break;
             case NEBLINA_SUBSYSTEM_EEPROM:	//small EEPROM storage
-                mDelegate.didReceiveEepromData(this, pkt[3], data, datalen, errFlag);
+                mDelegate.didReceiveEepromData(this, pktype, pkt[3], data, datalen, errFlag);
                 break;
             case NEBLINA_SUBSYSTEM_SENSOR:
-                mDelegate.didReceiveSensorData(this, pkt[3], data, datalen, errFlag);
+                mDelegate.didReceiveSensorData(this, pktype, pkt[3], data, datalen, errFlag);
         }
     }
 
@@ -326,10 +437,51 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
             pkbuf[4 + i] = ParamData[i];
         }
 
-        pkbuf[2] = crc8(pkbuf, pkbuf.length);
+        pkbuf[2] = crc8(pkbuf, 4 + ParamLen);
 
-        mCtrlChar.setValue(pkbuf);
-        mBleGatt.writeCharacteristic(mCtrlChar);
+        Log.i("sendCommand - ", String.valueOf(pkbuf));
+
+/*
+        mCtrlChar.setWriteType(WRITE_TYPE_DEFAULT);//WRITE_TYPE_NO_RESPONSE);
+        boolean res = mCtrlChar.setValue(pkbuf);
+        Log.i("sendCommand - setValue", String.valueOf(res));
+
+        synchronized (mCharWritCompleted) {
+            mCharWritCompleted = false;
+        }
+
+        final Intent intent = new Intent(mCtx, Neblina.class);
+        intent.putExtra("NeblinaSendCmd", pkbuf);
+
+        mCtx.sendBroadcast(intent);
+
+        //broadcastUpdate(Intent.ACTION_SEND, );
+        do {
+            res = mBleGatt.writeCharacteristic(mCtrlChar);
+            Log.i("sendCommand - writeCharacteristic", String.valueOf(res));
+            SystemClock.sleep(1000);
+        } while (res == false);
+       // while (mCharWritCompleted == false) {
+       //     yield();
+        //}
+*/
+        if (mCmdQue.isEmpty() && mCharWritCompleted == true) {
+            synchronized (mCharWritCompleted) {
+                mCharWritCompleted = false;
+            }
+            BluetoothGattService service = mBleGatt.getService(NEB_SERVICE_UUID);
+            BluetoothGattCharacteristic lCtrlChar = service.getCharacteristic(NEB_CTRLCHAR_UUID);
+
+            boolean res = lCtrlChar.setValue(pkbuf);
+            Log.i("sendCommand - lsetValue", String.valueOf(res));
+            res = mBleGatt.writeCharacteristic(lCtrlChar);
+            if (res == false)
+                mCmdQue.add(pkbuf);
+            Log.i("sendCommand - lwriteCharacteristic", String.valueOf(res));
+        }
+        else {
+            mCmdQue.add(pkbuf);
+        }
     }
 
     // ********************************
@@ -1057,4 +1209,5 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
         mDelegate = (NeblinaDelegate) in.readValue(null);
         mCtrlChar = (BluetoothGattCharacteristic) in.readValue(null);
     }
+
 }
