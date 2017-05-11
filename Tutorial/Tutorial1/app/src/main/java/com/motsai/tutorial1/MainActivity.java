@@ -263,8 +263,13 @@ public class MainActivity extends AppCompatActivity implements NeblinaDelegate {
     public void didReceiveFusionData(Neblina sender, int respType, int cmdRspId, byte[] data, int dataLen, boolean errFlag) {
         switch (cmdRspId) {
             case Neblina.NEBLINA_COMMAND_FUSION_QUATERNION_STREAM:
+                int timeStamp = (int)data[0] | ((int)data[1] << 8) | ((int)data[2] << 16) | ((int)data[3] << 24);
+                double q1 = ((double)((int)data[4] | ((int)data[5] << 8))) / 32768.0;
+                double q2 = ((double)((int)data[6] | ((int)data[7] << 8))) / 32768.0;
+                double q3 = ((double)((int)data[8] | ((int)data[9] << 8))) / 32768.0;
+                double q4 = ((double)((int)data[10] | ((int)data[11] << 8))) / 32768.0;
 
-                String s = String.format("%d, %d, %d, %d", data[4] | ((int)data[5] << 8), data[6] | ((int)data[7] << 8), data[8] | ((int)data[9] << 8), data[10] | ((int)data[11] << 8));
+                String s = String.format("T : %d - (%f, %f, %f, %f)", timeStamp, q1, q2, q3, q4);
                 Log.w("BLUETOOTH DEBUG", s);
                 TextView txtView = (TextView) findViewById(R.id.text_view);
                 txtView.setText(s);
