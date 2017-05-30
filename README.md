@@ -1,4 +1,4 @@
-# Neblina&trade; ProMotion Development Kit Android Java
+# Neblina&trade; Development Kit Android Java
 =========  
 
 ![ProMotion Board](docs/images/V2btop.png)  
@@ -12,19 +12,21 @@ The Neblina&trade; module is a low-power self-contained [AHRS](https://en.wikipe
 
 The [Neblina&trade; Development Kit](http://neblina.io/) serves as a reference design for Neblina integration, I/O expansion and an onboard Debug J-Tag for custom firmware development. The development kit with the extensive software support allows system integrators and evaluators to start development within minutes.
 
-This repository is part of the development kit that provides a Java interface to interact with the Neblina.
+This repository is part of the development kit that provides a Java interface to interact with the Neblina&trade;.
 
 
 ### Prerequisite
 
-* Have on hand a Neblina module or Promotion Kit
+* Have on hand a Neblina&trade; module or Development Kit
 * An Android Phone or Tablet with Bluetooth LE capability.
 * Android 6.0 (Marshmallow) or above.
-* Follow the hardware [Quick Start guide](http://nebdox.motsai.com/ProMotion_DevKit/Getting_Started) to make sure that the Neblina module or Promotion kit is powered on and functional.
 * Clone or download this repo.
 * Android Studio 2.3 is required to compile
+* Android programming skills
 
-### Functionnal check  
+### Functional check  
+
+Follow the hardware [Quick Start guide](http://nebdox.motsai.com/ProMotion_DevKit/Getting_Started) to make sure that the Neblina&trade; module or Development Kit is powered on and functional.
 
 Download or Clone this repo using the command
 
@@ -32,7 +34,7 @@ Download or Clone this repo using the command
 $ git clone https://github.com/Motsai/neblina-android.git
 ```
 
-Open the Tutorial1 project, compile and execute the App.  The initial screen will list all available Neblina devices.  Select one of the Neblina that shows up.  It will automatically connect to the Neblina and begin streamming Quaternion.
+Open the Tutorial1 project, compile and execute the App.  The initial screen will list all available Neblina&trade; devices found.  Select one of the Neblina&trade; that shows up.  It will automatically connect to the Neblina&trade; and begin streaming Quaternion.
 
 Tutorial1 Screen Shot
 
@@ -42,7 +44,7 @@ Tutorial1 Screen Shot
 
 ### Need to know when creating new project
 
-In order to use the Neblina API in a new project the source files Neblina.java, NeblinaDelegate.java & NebCmdItem.java are needed to import into the project.  One way to do this in the Android Studio is to add the source path into the 'build.grade (Module : app)' inside 'android {' as shown bellow.  
+In order to use the Neblina&trade; API in a new project the source files Neblina.java, NeblinaDelegate.java & NebCmdItem.java are needed to import into the project.  One way to do this in the Android Studio is to add the source path into the 'build.grade (Module : app)' inside 'android {' as shown bellow.  
 
 ```
 android {
@@ -52,5 +54,20 @@ android {
   }
 }
 ```
+
+To enable Bluetooth support in the App.  Permission settings are required.  The following are needed to be added into the AndroidManifest.xml of the project.
+
+```
+<uses-permission android:name="android.permission.BLUETOOTH"/>
+<uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
+<uses-feature android:name="android.hardware.bluetooth_le" android:required="true"/>
+<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+```
+
+
+#### API documentations
+
+http://nebdox.motsai.com
 
 # NOTE : This repository is still under heavy development.

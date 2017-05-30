@@ -146,6 +146,12 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
     public static final byte NEBLINA_COMMAND_RECORDER_SESSION_OPEN      = 8;
     public static final byte NEBLINA_COMMAND_RECORDER_SESSION_CLOSE     = 9;
 
+    public static final byte NEBLINA_RECORDER_STATUS_IDLE   = 0x0,
+            NEBLINA_RECORDER_STATUS_READ     = 0x01,
+            NEBLINA_RECORDER_STATUS_RECORD   = 0x02,
+            NEBLINA_RECORDER_STATUS_ERASE    = 0x03,
+            NEBLINA_RECORDER_STATUS_DOWNLOAD = 0x04;
+
     // ***
     // Sensore subsystem commands
     public static final byte NEBLINA_COMMAND_SENSOR_SET_DOWNSAMPLE                      = 0;
@@ -179,6 +185,46 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
     public static final byte NEBLINA_INTERFACE_STATUS_BLE = (1 << DATAPORT_BLE);
     public static final byte NEBLINA_INTERFACE_STATUS_UART = (1 << DATAPORT_UART);
 
+    //
+    public static final byte NEBLINA_FUSION_STREAM_EULER = 0x00,
+            NEBLINA_FUSION_STREAM_EXTERNAL_FORCE   = 0x01,
+        NEBLINA_FUSION_STREAM_FINGER_GESTURE   = 0x02,
+        NEBLINA_FUSION_STREAM_MOTION_ANALYSIS  = 0x03,
+        NEBLINA_FUSION_STREAM_MOTION_STATE     = 0x04,
+        NEBLINA_FUSION_STREAM_PEDOMETER        = 0x05,
+        NEBLINA_FUSION_STREAM_QUATERNION       = 0x06,
+        NEBLINA_FUSION_STREAM_ROTATION_INFO    = 0x07,
+        NEBLINA_FUSION_STREAM_SITTING_STANDING = 0x08,
+        NEBLINA_FUSION_STREAM_TRAJECTORY_INFO  = 0x09;
+
+    public static final byte NEBLINA_FUSION_STATUS_EULER  = (byte)( 1 << NEBLINA_FUSION_STREAM_EULER ),
+            NEBLINA_FUSION_STATUS_EXTERNAL_FORCE   = (byte)( 1 << NEBLINA_FUSION_STREAM_EXTERNAL_FORCE ),
+            NEBLINA_FUSION_STATUS_FINGER_GESTURE   = (byte)( 1 << NEBLINA_FUSION_STREAM_FINGER_GESTURE ),
+            NEBLINA_FUSION_STATUS_MOTION_ANALYSIS  = (byte)( 1 << NEBLINA_FUSION_STREAM_MOTION_ANALYSIS ),
+            NEBLINA_FUSION_STATUS_MOTION_STATE     = (byte)( 1 << NEBLINA_FUSION_STREAM_MOTION_STATE ),
+            NEBLINA_FUSION_STATUS_PEDOMETER        = (byte)( 1 << NEBLINA_FUSION_STREAM_PEDOMETER ),
+            NEBLINA_FUSION_STATUS_QUATERNION       = (byte)( 1 << NEBLINA_FUSION_STREAM_QUATERNION ),
+            NEBLINA_FUSION_STATUS_ROTATION_INFO    = (byte)( 1 << NEBLINA_FUSION_STREAM_ROTATION_INFO),
+            NEBLINA_FUSION_STATUS_SITTING_STANDING = (byte)( 1 << NEBLINA_FUSION_STREAM_SITTING_STANDING),
+            NEBLINA_FUSION_STATUS_TRAJECTORY_INFO  = (byte)( 1 << NEBLINA_FUSION_STREAM_TRAJECTORY_INFO );
+
+    public static final byte NEBLINA_SENSOR_STREAM_ACCELEROMETER = 0x00,
+        NEBLINA_SENSOR_STREAM_ACCELEROMETER_GYROSCOPE    = 0x01,
+        NEBLINA_SENSOR_STREAM_ACCELEROMETER_MAGNETOMETER = 0x02,
+        NEBLINA_SENSOR_STREAM_GYROSCOPE                  = 0x03,
+        NEBLINA_SENSOR_STREAM_HUMIDITY                   = 0x04,
+        NEBLINA_SENSOR_STREAM_MAGNETOMETER               = 0x05,
+        NEBLINA_SENSOR_STREAM_PRESSURE                   = 0x06,
+        NEBLINA_SENSOR_STREAM_TEMPERATURE                = 0x07;
+
+    public static final byte     NEBLINA_SENSOR_STATUS_ACCELEROMETER    = (byte) ( 1 << NEBLINA_SENSOR_STREAM_ACCELEROMETER ),
+            NEBLINA_SENSOR_STATUS_ACCELEROMETER_GYROSCOPE    = (byte) ( 1 << NEBLINA_SENSOR_STREAM_ACCELEROMETER_GYROSCOPE ),
+            NEBLINA_SENSOR_STATUS_ACCELEROMETER_MAGNETOMETER = (byte) ( 1 << NEBLINA_SENSOR_STREAM_ACCELEROMETER_MAGNETOMETER ),
+            NEBLINA_SENSOR_STATUS_GYROSCOPE                  = (byte) ( 1 << NEBLINA_SENSOR_STREAM_GYROSCOPE ),
+            NEBLINA_SENSOR_STATUS_HUMIDITY                   = (byte) ( 1 << NEBLINA_SENSOR_STREAM_HUMIDITY ),
+            NEBLINA_SENSOR_STATUS_MAGNETOMETER               = (byte) ( 1 << NEBLINA_SENSOR_STREAM_MAGNETOMETER ),
+            NEBLINA_SENSOR_STATUS_PRESSURE                   = (byte) ( 1 << NEBLINA_SENSOR_STREAM_PRESSURE ),
+            NEBLINA_SENSOR_STATUS_TEMPERATURE                = (byte) ( 1 << NEBLINA_SENSOR_STREAM_TEMPERATURE );
 
     BluetoothDevice Nebdev;
     String Name;
@@ -284,6 +330,7 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
             BluetoothGattService service = gatt.getService(NEB_SERVICE_UUID);
             BluetoothGattCharacteristic data_characteristic = service.getCharacteristic(NEB_DATACHAR_UUID);
             mCtrlChar = service.getCharacteristic(NEB_CTRLCHAR_UUID);
+            mCtrlChar.setWriteType(WRITE_TYPE_NO_RESPONSE);
             List<BluetoothGattDescriptor> descriptors = data_characteristic.getDescriptors();
             synchronized (mCharWritCompleted) {
                 mCharWritCompleted = false;
@@ -317,12 +364,12 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
         if (mCmdQue.isEmpty() == false) {
             byte[] pkbuf = mCmdQue.remove();
 
-            BluetoothGattService service = mBleGatt.getService(NEB_SERVICE_UUID);
-            BluetoothGattCharacteristic lCtrlChar = service.getCharacteristic(NEB_CTRLCHAR_UUID);
+            //BluetoothGattService service = mBleGatt.getService(NEB_SERVICE_UUID);
+            //BluetoothGattCharacteristic lCtrlChar = service.getCharacteristic(NEB_CTRLCHAR_UUID);
 
-            boolean res = lCtrlChar.setValue(pkbuf);
+            boolean res = mCtrlChar.setValue(pkbuf);
             Log.i("onCharacteristicWrite - lsetValue", String.valueOf(res));
-            res = mBleGatt.writeCharacteristic(lCtrlChar);
+            res = mBleGatt.writeCharacteristic(mCtrlChar);
 
             Log.i("onCharacteristicWrite - lwriteCharacteristic", String.valueOf(res));
         }
@@ -341,12 +388,12 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
         if (mCmdQue.isEmpty() == false) {
             byte[] pkbuf = mCmdQue.remove();
 
-            BluetoothGattService service = mBleGatt.getService(NEB_SERVICE_UUID);
-            BluetoothGattCharacteristic lCtrlChar = service.getCharacteristic(NEB_CTRLCHAR_UUID);
+            //BluetoothGattService service = mBleGatt.getService(NEB_SERVICE_UUID);
+            //BluetoothGattCharacteristic lCtrlChar = service.getCharacteristic(NEB_CTRLCHAR_UUID);
 
-            boolean res = lCtrlChar.setValue(pkbuf);
+            boolean res = mCtrlChar.setValue(pkbuf);
             Log.i("onCharacteristicWrite - lsetValue", String.valueOf(res));
-            res = mBleGatt.writeCharacteristic(lCtrlChar);
+            res = mBleGatt.writeCharacteristic(mCtrlChar);
 
             Log.i("onCharacteristicWrite - lwriteCharacteristic", String.valueOf(res));
         }
@@ -393,6 +440,12 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
 
         for (int i = 0; i < datalen; i++)
             data[i] = pkt[i+4];
+
+        if (pktype == NEBLINA_PACKET_TYPE_RESPONSE) {
+            mDelegate.didReceiveResponsePacket(this, subsys, pkt[3], data, datalen);
+
+            return;
+        }
 
         switch (subsys) {
             case NEBLINA_SUBSYSTEM_GENERAL:
@@ -469,12 +522,12 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
             synchronized (mCharWritCompleted) {
                 mCharWritCompleted = false;
             }
-            BluetoothGattService service = mBleGatt.getService(NEB_SERVICE_UUID);
-            BluetoothGattCharacteristic lCtrlChar = service.getCharacteristic(NEB_CTRLCHAR_UUID);
+           // BluetoothGattService service = mBleGatt.getService(NEB_SERVICE_UUID);
+           // BluetoothGattCharacteristic lCtrlChar = service.getCharacteristic(NEB_CTRLCHAR_UUID);
 
-            boolean res = lCtrlChar.setValue(pkbuf);
+            boolean res = mCtrlChar.setValue(pkbuf);
             Log.i("sendCommand - lsetValue", String.valueOf(res));
-            res = mBleGatt.writeCharacteristic(lCtrlChar);
+            res = mBleGatt.writeCharacteristic(mCtrlChar);
             if (res == false)
                 mCmdQue.add(pkbuf);
             Log.i("sendCommand - lwriteCharacteristic", String.valueOf(res));
@@ -1184,6 +1237,7 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
     @Override
     public void writeToParcel(Parcel out, int flags) {
         out.writeValue(Nebdev);
+        out.writeString(Name);
         out.writeLong(DevId);
         out.writeValue(mBleGatt);
         out.writeValue(mDelegate);
@@ -1204,6 +1258,7 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
 
     private Neblina(Parcel in) {
         Nebdev = (BluetoothDevice) in.readValue(null);
+        Name = in.readString();
         DevId = in.readLong();
         mBleGatt = (BluetoothGatt) in.readValue(null);
         mDelegate = (NeblinaDelegate) in.readValue(null);

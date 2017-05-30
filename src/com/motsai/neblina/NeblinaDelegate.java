@@ -18,8 +18,27 @@ public interface NeblinaDelegate {
     public final static String ACTION_NEB_SENSOR_DATA = "com.motsai.neblina.ACTION_NEB_SENSOR_DATA";
 
     void didConnectNeblina(Neblina sender);
+
+    /**
+     * Command response packet
+     * @param sender
+     * @param subsystem
+     * @param cmdRspId
+     * @param data
+     * @param dataLen
+     */
     void didReceiveResponsePacket(Neblina sender, int subsystem, int cmdRspId, byte[] data, int dataLen);
     void didReceiveRSSI(Neblina sender, int rssi);
+
+    /**
+     * Data streamming packet
+     * @param sender
+     * @param respType
+     * @param cmdRspId
+     * @param data
+     * @param dataLen
+     * @param errFlag
+     */
     void didReceiveGeneralData(Neblina sender, int respType, int cmdRspId, byte[] data, int dataLen, boolean errFlag);
     void didReceiveFusionData(Neblina sender, int respType, int cmdRspId, byte[] data, int dataLen, boolean errFlag);
     void didReceivePmgntData(Neblina sender, int respType, int cmdRspId, byte[] data, int dataLen, boolean errFlag);

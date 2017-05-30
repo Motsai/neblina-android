@@ -1,33 +1,36 @@
 package com.motsai.nebctrlpanel;
-import android.support.v4.app.FragmentActivity;
+
+import android.content.Context;
+import android.util.Log;
 import android.view.ViewParent;
 import android.widget.ListView;
-import android.widget.ArrayAdapter;
-import android.content.Context;
-import java.util.List;
-import android.view.ViewGroup;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.BaseAdapter;
 import android.widget.TextView;
+import android.widget.ArrayAdapter;
 import android.widget.Switch;
 import android.widget.Button;
-import android.view.View.OnClickListener;
-import android.widget.TableRow;
-import android.app.Fragment;
 import android.widget.CompoundButton;
+import android.view.View.OnClickListener;
 
 import com.motsai.neblina.NebCmdItem;
 import com.motsai.neblina.Neblina;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
- * Created by hoanmotsai on 2016-08-03.
+ * Created by hoanmotsai on 2017-05-17.
  */
-public class NebListAdapter extends ArrayAdapter<NebCmdItem> {
-    public NebListAdapter(Context context, int textViewResourceId) {
+
+public class CmdListAdapter extends ArrayAdapter<NebCmdItem> {
+    public CmdListAdapter(Context context, int textViewResourceId) {
         super(context, textViewResourceId);
     }
 
-    public NebListAdapter(Context context, int resource, NebCmdItem[] items) {
+    public CmdListAdapter(Context context, int resource, NebCmdItem[] items) {
         super(context, resource, items);
     }
 
@@ -57,6 +60,9 @@ public class NebListAdapter extends ArrayAdapter<NebCmdItem> {
             TextView t = (TextView) v.findViewById(R.id.textField);
             t.setVisibility(View.INVISIBLE);
             t.setTag(-1);
+            TextView t2 = (TextView) v.findViewById(R.id.textField1);
+            t2.setVisibility(View.INVISIBLE);
+            t2.setTag(-1);
 //            b.setId(300 + i);
 
             switch (p.mActuator) {
@@ -67,20 +73,24 @@ public class NebListAdapter extends ArrayAdapter<NebCmdItem> {
                         @Override
                         public void onCheckedChanged(CompoundButton vi, boolean isChecked)
                         {
-                           // int idx = (int)vi.getTag();
+                            // int idx = (int)vi.getTag();
 
                             ViewParent vp = vi.getParent().getParent().getParent();
                             if (vp instanceof ListView) {
                                 ListView lv = (ListView) vp;
-                                NebDeviceDetailFragment fr = (NebDeviceDetailFragment)lv.getTag();
-                                if (fr != null) {
-                                   fr.onSwitchButtonChanged(vi, isChecked);
+                                MainActivity act = (MainActivity)lv.getTag();
+                                if (act != null) {
+                                    act.onSwitchButtonChanged(vi, isChecked);
                                 }
                             }
                         }
                     });
 
                     break;
+                case 4:
+                    t2.setVisibility(View.VISIBLE);
+                    t2.setTag(position);
+
                 case 2: // Button
                     b.setVisibility(View.VISIBLE);
                     b.setTag(position);
@@ -89,13 +99,13 @@ public class NebListAdapter extends ArrayAdapter<NebCmdItem> {
                         @Override
                         public void onClick(View vi)
                         {
-                           // int idx = (int)vi.getTag();
+                            // int idx = (int)vi.getTag();
                             ViewParent vp = vi.getParent().getParent().getParent();
                             if (vp instanceof ListView) {
                                 ListView lv = (ListView) vp;
-                                NebDeviceDetailFragment fr = (NebDeviceDetailFragment)lv.getTag();
-                                if (fr != null) {
-                                    fr.onButtonClick(vi);
+                                MainActivity act = (MainActivity)lv.getTag();
+                                if (act != null) {
+                                    act.onButtonClick(vi);
                                 }
                             }
                         }
@@ -106,9 +116,11 @@ public class NebListAdapter extends ArrayAdapter<NebCmdItem> {
                     t.setTag(position);
 
                     break;
+
             }
         }
 
         return v;
     }
+
 }

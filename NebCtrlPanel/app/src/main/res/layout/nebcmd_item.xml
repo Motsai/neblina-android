@@ -5,48 +5,62 @@
     android:id="@+id/tableRow">
 
     <TextView
-        android:layout_width="253dp"
+        android:layout_width="300dp"
         android:layout_height="match_parent"
         android:text="New Text"
         android:textAppearance="?android:attr/textAppearanceMedium"
         android:id="@+id/textView"
-        android:layout_column="0" />
+        android:layout_column="0"
+        />
 
-    <FrameLayout
-        android:layout_width="match_parent"
+    <EditText
+        android:id="@+id/textField1"
+        android:layout_width="100dp"
         android:layout_height="match_parent"
-        android:weightSum="1"
-        android:layout_column="1">
+        android:layout_column="1"
+        android:imeOptions="actionDone"
+        android:inputType="number"
+        android:lines="1"
+        android:maxLines="1"
+        android:text="123"
+        />
+
+     <FrameLayout
+        android:layout_width="100dp"
+        android:layout_height="match_parent"
+        android:layout_column="2"
+        android:weightSum="1">
+
+         <EditText
+            android:id="@+id/textField"
+            android:layout_width="100dp"
+            android:layout_height="match_parent"
+            android:layout_column="1"
+            android:imeOptions="actionDone"
+            android:inputType="number"
+            android:lines="1"
+            android:maxLines="1"
+            android:text="123"
+            android:visibility="invisible" />
 
         <Switch
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
             android:id="@+id/switch1"
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
             android:layout_column="1"
-            android:enabled="true"
             android:layout_weight="1"
+            android:enabled="true"
             android:visibility="invisible" />
 
         <Button
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Button"
             android:id="@+id/button"
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
             android:layout_column="1"
-            android:visibility="invisible"
             android:layout_weight="1"
-            android:enabled="true" />
-        <EditText
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:text="123"
-            android:id="@+id/textField"
-            android:visibility="invisible"
-            android:layout_column="1"
-            android:inputType="number"
-            android:maxLines="1"
-            android:imeOptions="actionDone"
-            android:lines="1" />
+            android:enabled="true"
+            android:text="Button"
+            android:visibility="invisible" />
 
     </FrameLayout>
 
