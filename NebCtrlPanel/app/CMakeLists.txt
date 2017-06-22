@@ -5,6 +5,8 @@
 
 cmake_minimum_required(VERSION 3.4.1)
 
+
+
 # Creates and names a library, sets it as either STATIC
 # or SHARED, and provides the relative paths to its source code.
 # You can define multiple libraries, and CMake builds them for you.
@@ -17,7 +19,25 @@ add_library( # Sets the name of the library.
              SHARED
 
              # Provides a relative path to your source file(s).
-             src/main/cpp/native-lib.cpp )
+             src/main/cpp/native-lib.cpp src/main/cpp/AndroidJNIIOSystem.cpp)
+
+add_library(
+            assimp
+            SHARED
+            IMPORTED
+                   )
+set_target_properties( # Specifies the target library.
+                       assimp
+
+                       # Specifies the parameter you want to define.
+                       PROPERTIES IMPORTED_LOCATION
+
+                       # Provides the path to the library you want to import.
+                       ../../../../libs/${ANDROID_ABI}/libassimp.so )
+
+# Specifies a path to native header files.
+include_directories(../../libs/assimp-3.10/assimp/include/)
+
 
 # Searches for a specified prebuilt library and stores the path as a
 # variable. Because CMake includes system libraries in the search path by
@@ -28,9 +48,18 @@ add_library( # Sets the name of the library.
 find_library( # Sets the name of the path variable.
               log-lib
 
+
               # Specifies the name of the NDK library that
               # you want CMake to locate.
-              log )
+              log)
+
+#find_library( # Sets the name of the path variable.
+#              assimp-lib
+
+              # Specifies the name of the NDK library that
+              # you want CMake to locate.
+ #             assimp)
+#file(GLOB LIBRARIES "../../libs/assimp-3.10/libassimp.so")
 
 # Specifies libraries CMake should link to your target library. You
 # can link multiple libraries, such as libraries you define in this
@@ -38,7 +67,9 @@ find_library( # Sets the name of the path variable.
 
 target_link_libraries( # Specifies the target library.
                        native-lib
+                    assimp
 
                        # Links the target library to the log library
                        # included in the NDK.
-                       ${log-lib} )
+                       ${log-lib})
+

@@ -1,5 +1,6 @@
 package com.motsai.nebctrlpanel;
 
+import android.app.Activity;
 import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -9,6 +10,8 @@ import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanRecord;
 import android.bluetooth.le.ScanResult;
 import android.content.Context;
+import android.content.res.AssetManager;
+import android.opengl.GLSurfaceView;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -26,6 +29,8 @@ import android.widget.TextView;
 
 import com.motsai.neblina.*;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.HashMap;
@@ -33,7 +38,7 @@ import java.util.List;
 import java.util.Map;
 import java.lang.Math.*;
 
-public class MainActivity extends AppCompatActivity implements NeblinaDelegate {
+public class MainActivity extends Activity implements NeblinaDelegate {
     private BluetoothAdapter mBluetoothAdapter;
     private Handler mHandler;
     private BluetoothLeScanner mLEScanner;
@@ -50,6 +55,7 @@ public class MainActivity extends AppCompatActivity implements NeblinaDelegate {
     private int mQuatCnt = 0;
     private int mQuatBdCnt = 0;
     private boolean mFlashEraseProgress = false;
+    private MyGLSurfaceView mGLView;
 
     public static final NebCmdItem[] cmdList = new NebCmdItem[] {
             new NebCmdItem(Neblina.NEBLINA_SUBSYSTEM_GENERAL, Neblina.NEBLINA_COMMAND_GENERAL_INTERFACE_STATE,
@@ -106,6 +112,13 @@ public class MainActivity extends AppCompatActivity implements NeblinaDelegate {
             new NebCmdItem((byte)0xf, (byte)1, 0, "Heading", NebCmdItem.ACTUATOR_TYPE_SWITCH, "")
     };
 
+    /**
+     * load libModelAssimpNative.so since it has all the native functions
+     */
+    static {
+        System.loadLibrary("native-lib");
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -113,10 +126,33 @@ public class MainActivity extends AppCompatActivity implements NeblinaDelegate {
 
         requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION}, 1);
 
+        AssetManager assetManager = getAssets();
+        final InputStream file;
+        int len = 0;
+        byte[] xxx = null;
+        try {
+            file = assetManager.open("amenemhat/amenemhat.obj");
+            len = file.available();
+            xxx = new byte[len];//= new byte[len];
+            file.read(xxx);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        byte x = xxx[0];
+
+        AssimpInit();
+
+        String name = getFilesDir().getAbsolutePath() + "/assets/amenemhat/amenemhat.obj";
+        String retval = AssimpLoadModel(xxx, len);//("assets/amenemhat/amenemhat.obj");
+
+        String pathToInternalDir = getFilesDir().getAbsolutePath();
+
+        mGLView = (MyGLSurfaceView) findViewById (R.id.surfaceView);
+
         final BluetoothManager bluetoothManager =
                 (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
-
-        //mTextView = (TextView) findViewById(R.id.text_view);
 
         mBluetoothAdapter = bluetoothManager.getAdapter();
         mLEScanner = mBluetoothAdapter.getBluetoothLeScanner();
@@ -141,6 +177,7 @@ public class MainActivity extends AppCompatActivity implements NeblinaDelegate {
 
             }
         });
+
 
         mCmdListView = (ListView) findViewById(R.id.cmd_listView);
 
@@ -167,20 +204,20 @@ public class MainActivity extends AppCompatActivity implements NeblinaDelegate {
         );
 
         mLEScanner.startScan(mScanCallback);
+    }
 
- /*       mQuatSwitch = (Switch) findViewById(R.id.switch1);
-        //mQuatSwitch.setChecked(true);
+    @Override
+    protected void onPause()
+    {
+        super.onPause();
+        mGLView.onPause();
+    }
 
-        mOnCheck = new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (mDev == null)
-                    return;
-
-                mDev.streamQuaternion(isChecked);
-            }
-        };
-        mQuatSwitch.setOnCheckedChangeListener(mOnCheck);*/
+    @Override
+    protected void onResume()
+    {
+        super.onResume();
+        mGLView.onResume();
     }
 
     public void onSwitchButtonChanged(CompoundButton button, boolean isChecked) {
@@ -741,4 +778,12 @@ public class MainActivity extends AppCompatActivity implements NeblinaDelegate {
                 break;
         }
     }
+    /**
+     * A native method that is implemented by the 'native-lib' native library,
+     * which is packaged with this application.
+     */
+    public native String stringFromJNI();
+    public native void AssimpInit();
+    public native String AssimpLoadModelFile(String fileName);
+    public native String AssimpLoadModel(byte[] buffer, int len);
 }
