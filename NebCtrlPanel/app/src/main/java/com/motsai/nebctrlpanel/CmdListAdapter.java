@@ -2,24 +2,19 @@ package com.motsai.nebctrlpanel;
 
 import android.content.Context;
 import android.util.Log;
-import android.view.ViewParent;
-import android.widget.ListView;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
-import android.widget.BaseAdapter;
-import android.widget.TextView;
+import android.view.ViewParent;
 import android.widget.ArrayAdapter;
-import android.widget.Switch;
 import android.widget.Button;
 import android.widget.CompoundButton;
-import android.view.View.OnClickListener;
+import android.widget.ListView;
+import android.widget.Switch;
+import android.widget.TextView;
 
 import com.motsai.neblina.NebCmdItem;
-import com.motsai.neblina.Neblina;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Created by hoanmotsai on 2017-05-17.
@@ -48,6 +43,7 @@ public class CmdListAdapter extends ArrayAdapter<NebCmdItem> {
         NebCmdItem p = getItem(position);
 
         if (p != null) {
+            Log.d("***** CmdListAdapter", "getView *****" + position);
             TextView label = (TextView) v.findViewById(R.id.textView);
             label.setText(p.mName);
 
@@ -66,13 +62,18 @@ public class CmdListAdapter extends ArrayAdapter<NebCmdItem> {
 //            b.setId(300 + i);
 
             switch (p.mActuator) {
-                case 1: // Switch
+                case NebCmdItem.ACTUATOR_TYPE_TEXT_FIELD_SWITCH:
+                    c.setVisibility(View.VISIBLE);
+                    c.setTag(position);
+
+                case NebCmdItem.ACTUATOR_TYPE_SWITCH: // Switch
                     c.setVisibility(View.VISIBLE);
                     c.setTag(position);
                     c.setOnCheckedChangeListener(new Switch.OnCheckedChangeListener() {
                         @Override
                         public void onCheckedChanged(CompoundButton vi, boolean isChecked)
                         {
+                            Log.d("***** CmdListAdapter", "setOnCheckedChangeListener *****" + isChecked);
                             // int idx = (int)vi.getTag();
 
                             ViewParent vp = vi.getParent().getParent().getParent();
@@ -86,12 +87,13 @@ public class CmdListAdapter extends ArrayAdapter<NebCmdItem> {
                         }
                     });
 
+
                     break;
-                case 4:
+                case NebCmdItem.ACTUATOR_TYPE_TEXT_FIELD_BUTTON:
                     t2.setVisibility(View.VISIBLE);
                     t2.setTag(position);
 
-                case 2: // Button
+                case NebCmdItem.ACTUATOR_TYPE_BUTTON : // Button
                     b.setVisibility(View.VISIBLE);
                     b.setTag(position);
                     b.setText(p.mText);
@@ -111,7 +113,7 @@ public class CmdListAdapter extends ArrayAdapter<NebCmdItem> {
                         }
                     });
                     break;
-                case 3: // Text field
+                case NebCmdItem.ACTUATOR_TYPE_TEXT_FIELD: // Text field
                     t.setVisibility(View.VISIBLE);
                     t.setTag(position);
 
