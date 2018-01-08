@@ -7,7 +7,8 @@ public class NebCmdItem {
     public static final byte ACTUATOR_TYPE_SWITCH			    = 1;
     public static final byte ACTUATOR_TYPE_BUTTON			    = 2;
     public static final byte ACTUATOR_TYPE_TEXT_FIELD		    = 3;
-    public static final byte ACTUATOR_TYPE_TEXT_FILED_BUTTON	= 4;
+    public static final byte ACTUATOR_TYPE_TEXT_FIELD_BUTTON	= 4;
+    public static final byte ACTUATOR_TYPE_TEXT_FIELD_SWITCH	= 5;
 
     public byte mSubSysId;
     public byte mCmdId;
