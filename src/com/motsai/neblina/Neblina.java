@@ -70,48 +70,65 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
 
     // ***
     // General subsystem commands
-    public static final byte NEBLINA_COMMAND_GENERAL_SYSTEM_STATUS      = 1;
-    public static final byte NEBLINA_COMMAND_GENERAL_FUSION_STATUS      = 2;
-    public static final byte NEBLINA_COMMAND_GENERAL_RECORDER_STATUS	= 3;	// asks for the streaming status of the motion engine, as well as the flash recorder state
-    public static final byte NEBLINA_COMMAND_GENERAL_FIRMWARE_VERSION	= 5;    // Get firmware version
-    public static final byte NEBLINA_COMMAND_GENERAL_RSSI				= 7;	// get the BLE signal strength in db
-    public static final byte NEBLINA_COMMAND_GENERAL_INTERFACE_STATUS   = 8;    // Get streaming data interface port state.
-    public static final byte NEBLINA_COMMAND_GENERAL_INTERFACE_STATE	= 9;	// Enable/Disable streaming data interface port
-    public static final byte NEBLINA_COMMAND_GENERAL_POWER_STATUS       = 10;
-    public static final byte NEBLINA_COMMAND_GENERAL_SENSOR_STATUS	    = 11;
-    public static final byte NEBLINA_COMMAND_GENERAL_DISABLE_STREAMING	= 12;
-    public static final byte NEBLINA_COMMAND_GENERAL_RESET_TIMESTAMP	= 13;
-    public static final byte NEBLINA_COMMAND_GENERAL_FIRMWARE_UPDATE	= 14;
-    public static final byte NEBLINA_COMMAND_GENERAL_DEVICE_NAME_GET	= 15;
-    public static final byte NEBLINA_COMMAND_GENERAL_DEVICE_NAME_SET    = 16;
+    public static final byte NEBLINA_COMMAND_GENERAL_AUTHENTICATION              = 0x00;
+    public static final byte NEBLINA_COMMAND_GENERAL_SYSTEM_STATUS               = 0x01;
+    public static final byte NEBLINA_COMMAND_GENERAL_FUSION_STATUS               = 0x02;
+    public static final byte NEBLINA_COMMAND_GENERAL_RECORDER_STATUS             = 0x03;
+    public static final byte NEBLINA_COMMAND_GENERAL_FIRMWARE_VERSION            = 0x05;
+    public static final byte NEBLINA_COMMAND_GENERAL_DEVICE_SHUTDOWN             = 0x06;
+    public static final byte NEBLINA_COMMAND_GENERAL_RSSI                        = 0x07;
+    public static final byte NEBLINA_COMMAND_GENERAL_INTERFACE_STATUS            = 0x08;
+    public static final byte NEBLINA_COMMAND_GENERAL_INTERFACE_STATE             = 0x09;
+    public static final byte NEBLINA_COMMAND_GENERAL_POWER_STATUS                = 0x0A;
+    public static final byte NEBLINA_COMMAND_GENERAL_SENSOR_STATUS               = 0x0B;
+    public static final byte NEBLINA_COMMAND_GENERAL_DISABLE_STREAMING           = 0x0C;
+    public static final byte NEBLINA_COMMAND_GENERAL_RESET_TIMESTAMP             = 0x0D;
+    public static final byte NEBLINA_COMMAND_GENERAL_FIRMWARE_UPDATE             = 0x0E;
+    public static final byte NEBLINA_COMMAND_GENERAL_DEVICE_NAME_GET             = 0x0F;
+    public static final byte NEBLINA_COMMAND_GENERAL_DEVICE_NAME_SET             = 0x10;
+    public static final byte NEBLINA_COMMAND_GENERAL_SET_UNIX_TIMESTAMP          = 0x11;
+    public static final byte NEBLINA_COMMAND_GENERAL_GET_UNIX_TIMESTAMP          = 0x12;
+// Reserved command 0x13, 0x14, 0x15 and 0x16 for configurator
+    public static final byte NEBLINA_COMMAND_GENERAL_DEVICE_RESET                = 0x17;
 
     // ***
     // Subsystem fusion commands
-    public static final byte NEBLINA_COMMAND_FUSION_RATE                        = 0;
-    public static final byte NEBLINA_COMMAND_FUSION_DOWNSAMPLE                  = 1;
-    public static final byte NEBLINA_COMMAND_FUSION_MOTION_STATE_STREAM         = 2;
-    public static final byte NEBLINA_COMMAND_FUSION_QUATERNION_STREAM           = 4;
-    public static final byte NEBLINA_COMMAND_FUSION_EULER_ANGLE_STREAM          = 5;
-    public static final byte NEBLINA_COMMAND_FUSION_EXTERNAL_FORCE_STREAM       = 6;
-    public static final byte NEBLINA_COMMAND_FUSION_FUSION_TYPE                 = 7;
-    public static final byte NEBLINA_COMMAND_FUSION_TRAJECTORY_RECORD           = 8;
-    public static final byte NEBLINA_COMMAND_FUSION_TRAJECTORY_INFO_STREAM	    = 9;
-    public static final byte NEBLINA_COMMAND_FUSION_PEDOMETER_STREAM            = 10;
-    public static final byte NEBLINA_COMMAND_FUSION_SITTING_STANDING_STREAM     = 12;
-    public static final byte NEBLINA_COMMAND_FUSION_LOCK_HEADING_REFERENCE	    = 13;
-    public static final byte NEBLINA_COMMAND_FUSION_FINGER_GESTURE_STREAM       = 17;
-    public static final byte NEBLINA_COMMAND_FUSION_ROTATION_INFO_STREAM   	    = 18;
-    public static final byte NEBLINA_COMMAND_FUSION_EXTERNAL_HEADING_CORRECTION = 19;
-    public static final byte NEBLINA_COMMAND_FUSION_ANALYSIS_RESET              = 20;
-    public static final byte NEBLINA_COMMAND_FUSION_ANALYSIS_CALIBRATE          = 21;
-    public static final byte NEBLINA_COMMAND_FUSION_ANALYSIS_CREATE_POSE		= 22;
-    public static final byte NEBLINA_COMMAND_FUSION_ANALYSIS_SET_ACTIVE_POSE    = 23;
-    public static final byte NEBLINA_COMMAND_FUSION_ANALYSIS_GET_ACTIVE_POSE    = 24;
-    public static final byte NEBLINA_COMMAND_FUSION_ANALYSIS_STREAM             = 25;
-    public static final byte NEBLINA_COMMAND_FUSION_ANALYSIS_POSE_INFO          = 26;
-    public static final byte NEBLINA_COMMAND_FUSION_CALIBRATE_FORWARD_POSITION  = 27;
-    public static final byte NEBLINA_COMMAND_FUSION_CALIBRATE_DOWN_POSITION     = 28;
-    public static final byte NEBLINA_COMMAND_FUSION_MOTION_DIRECTION_STREAM     = 30;
+    public static final byte NEBLINA_COMMAND_FUSION_RATE                                       = 0x00;
+    public static final byte NEBLINA_COMMAND_FUSION_DOWNSAMPLE                                 = 0x01;
+    public static final byte NEBLINA_COMMAND_FUSION_MOTION_STATE_STREAM                        = 0x02;
+    public static final byte NEBLINA_COMMAND_FUSION_QUATERNION_STREAM                          = 0x04;
+    public static final byte NEBLINA_COMMAND_FUSION_EULER_ANGLE_STREAM                         = 0x05;
+    public static final byte NEBLINA_COMMAND_FUSION_EXTERNAL_FORCE_STREAM                      = 0x06;
+    public static final byte NEBLINA_COMMAND_FUSION_FUSION_TYPE                                = 0x07;
+    public static final byte NEBLINA_COMMAND_FUSION_TRAJECTORY_RECORD                          = 0x08;
+    public static final byte NEBLINA_COMMAND_FUSION_TRAJECTORY_INFO_STREAM                     = 0x09;
+    public static final byte NEBLINA_COMMAND_FUSION_PEDOMETER_STREAM                           = 0x0A;
+    public static final byte NEBLINA_COMMAND_FUSION_SITTING_STANDING_STREAM                    = 0x0C;
+    public static final byte NEBLINA_COMMAND_FUSION_LOCK_HEADING_REFERENCE                     = 0x0D; /// obsolete
+    public static final byte NEBLINA_COMMAND_FUSION_FINGER_GESTURE_STREAM                      = 0x11;
+    public static final byte NEBLINA_COMMAND_FUSION_ROTATION_INFO_STREAM                       = 0x12;
+    public static final byte NEBLINA_COMMAND_FUSION_EXTERNAL_HEADING_CORRECTION                = 0x13;
+    public static final byte NEBLINA_COMMAND_FUSION_ANALYSIS_RESET                             = 0x14;
+    public static final byte NEBLINA_COMMAND_FUSION_ANALYSIS_CALIBRATE                         = 0x15;
+    public static final byte NEBLINA_COMMAND_FUSION_ANALYSIS_CREATE_POSE                       = 0x16;
+    public static final byte NEBLINA_COMMAND_FUSION_ANALYSIS_SET_ACTIVE_POSE                   = 0x17;
+    public static final byte NEBLINA_COMMAND_FUSION_ANALYSIS_GET_ACTIVE_POSE                   = 0x18;
+    public static final byte NEBLINA_COMMAND_FUSION_ANALYSIS_STREAM                            = 0x19;
+    public static final byte NEBLINA_COMMAND_FUSION_ANALYSIS_POSE_INFO                         = 0x1A;
+    public static final byte NEBLINA_COMMAND_FUSION_CALIBRATE_FORWARD_POSITION                 = 0x1B;
+    public static final byte NEBLINA_COMMAND_FUSION_CALIBRATE_DOWN_POSITION                    = 0x1C;
+    public static final byte NEBLINA_COMMAND_FUSION_MOTION_DIRECTION_STREAM                    = 0x1E;
+    public static final byte NEBLINA_COMMAND_FUSION_SHOCK_SEGMENT_STREAM                       = 0x1F;
+    public static final byte NEBLINA_COMMAND_FUSION_ACCELEROMETER_CALIBRATION_RESET            = 0x20;
+    public static final byte NEBLINA_COMMAND_FUSION_ACCELEROMETER_CALIBRATION_SET_NEW_POSITION = 0x21;
+    public static final byte NEBLINA_COMMAND_FUSION_CALIBRATED_ACCELEROMETER_STREAM            = 0x22;
+    public static final byte NEBLINA_COMMAND_FUSION_INCLINOMETER_CALIBRATE                     = 0x23;
+    public static final byte NEBLINA_COMMAND_FUSION_INCLINOMETER_STREAM                        = 0x24;
+    public static final byte NEBLINA_COMMAND_FUSION_MAGNETOMETER_AC_STREAM                     = 0x25;
+    public static final byte NEBLINA_COMMAND_FUSION_MOTION_INTENSITY_TREND_STREAM              = 0x26;
+    public static final byte NEBLINA_COMMAND_FUSION_SET_GOLFSWING_ANALYSIS_MODE                = 0x27;
+    public static final byte NEBLINA_COMMAND_FUSION_SET_GOLFSWING_MAXIMUM_ERROR                = 0x28;
+
 
     // ***
     // Power management subsystem command code
@@ -145,6 +162,8 @@ public class Neblina extends BluetoothGattCallback implements Parcelable {
     public static final byte NEBLINA_COMMAND_RECORDER_SESSION_DOWNLOAD  = 7;
     public static final byte NEBLINA_COMMAND_RECORDER_SESSION_OPEN      = 8;
     public static final byte NEBLINA_COMMAND_RECORDER_SESSION_CLOSE     = 9;
+    public static final byte NEBLINA_COMMAND_RECORDER_SESSION_NAME      = 0x0A;
+
 
     public static final byte NEBLINA_RECORDER_STATUS_IDLE   = 0x0,
             NEBLINA_RECORDER_STATUS_READ     = 0x01,
