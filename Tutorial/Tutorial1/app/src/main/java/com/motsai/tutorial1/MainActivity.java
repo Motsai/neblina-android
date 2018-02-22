@@ -9,11 +9,7 @@ import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanRecord;
 import android.bluetooth.le.ScanResult;
 import android.content.Context;
-import android.content.Intent;
-import android.database.DataSetObserver;
-import android.os.Build;
 import android.os.Handler;
-import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -21,34 +17,32 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.CompoundButton;
-import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Switch;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import com.motsai.neblina.Neblina;
+import com.motsai.neblina.NeblinaDevice;
+import com.motsai.neblina.NeblinaDeviceList;
+import com.motsai.neblina.NeblinaDeviceListAdapter;
 import com.motsai.neblina.NeblinaDelegate;
-
-import static com.motsai.tutorial1.MainActivity.DeviceListAdapter.*;
+import com.motsai.neblina.NeblinaUtilities;
 
 public class MainActivity extends AppCompatActivity implements NeblinaDelegate {
 
     private BluetoothAdapter mBluetoothAdapter;
     private Handler mHandler;
     private BluetoothLeScanner mLEScanner;
-    private DeviceListAdapter mAdapter;
-    private Neblina mDev;
+    private DeviceListAdapter mDeviceListAdapter;
+    private NeblinaDevice mDev;
     private TextView mTextView;
     private Switch mQuatSwitch;
     private CompoundButton.OnCheckedChangeListener mOnCheck;/* = new CompoundButton.OnCheckedChangeListener() {
@@ -60,6 +54,31 @@ public class MainActivity extends AppCompatActivity implements NeblinaDelegate {
             mDev.streamQuaternion(isChecked);
         }
     };*/
+
+    private class DeviceListAdapter extends NeblinaDeviceListAdapter {
+
+        private final Context mContext;
+
+        public DeviceListAdapter(Context context) {
+            mContext = context;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+
+            if (convertView == null) {
+                LayoutInflater inflater = LayoutInflater.from(mContext);
+                convertView = inflater.inflate(R.layout.nebdevice_list_content, parent, false);
+            }
+
+            TextView textView = (TextView) convertView.findViewById(R.id.id);
+            if (getCount() > position) {
+                textView.setText(getItem(position).toString());
+            }
+
+            return convertView;
+        }
+    }
 
     private ScanCallback mScanCallback = new ScanCallback() {
         @Override
@@ -86,10 +105,10 @@ public class MainActivity extends AppCompatActivity implements NeblinaDelegate {
             deviceID = x.getLong();
 
 
-            ListView listView = (ListView) findViewById(R.id.founddevice_list);
-            DeviceListAdapter r = (DeviceListAdapter) listView.getAdapter();
-            mAdapter.addItem(new Neblina(name, deviceID, device));
-            mAdapter.notifyDataSetChanged();
+            //ListView listView = (ListView) findViewById(R.id.founddevice_list);
+            //DeviceListAdapter r = (DeviceListAdapter) listView.getAdapter();
+            mDeviceListAdapter.addItem(new NeblinaDevice(name, deviceID, device));
+            mDeviceListAdapter.notifyDataSetChanged();
 
         }
 
@@ -121,19 +140,19 @@ public class MainActivity extends AppCompatActivity implements NeblinaDelegate {
 
         mBluetoothAdapter = bluetoothManager.getAdapter();
         mLEScanner = mBluetoothAdapter.getBluetoothLeScanner();
-        mAdapter  = new DeviceListAdapter(this, R.layout.nebdevice_list_content);//android.R.layout.simple_list_item_1);
+        mDeviceListAdapter = new DeviceListAdapter(this);//android.R.layout.simple_list_item_1);
         ListView listView = (ListView) findViewById(R.id.founddevice_list);
-        listView.setAdapter(mAdapter);
+        listView.setAdapter(mDeviceListAdapter);
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                DeviceListAdapter adapter = (DeviceListAdapter) parent.getAdapter();
+                NeblinaDeviceListAdapter adapter = (NeblinaDeviceListAdapter) parent.getAdapter();
                 mLEScanner.stopScan(mScanCallback);
                 if (mDev != null) {
                     mDev.Disconnect();
                 }
 
-                mDev = (Neblina)adapter.getItem(position);
+                mDev = (NeblinaDevice)adapter.getItem(position);
                 mDev.SetDelegate(MainActivity.this);
                 mDev.Connect(getBaseContext());
 
@@ -158,83 +177,7 @@ public class MainActivity extends AppCompatActivity implements NeblinaDelegate {
         mQuatSwitch.setOnCheckedChangeListener(mOnCheck);
     }
 
-    public class DevListAdapter extends BaseAdapter {
-        // private final Context mContext;
-        private final Map<String, Neblina> mNebDevices = new HashMap<String, Neblina>();
-
-        @Override
-        public int getCount() {
-            return mNebDevices.size();
-        }
-
-        @Override
-        public Object getItem(int position) {
-            return null;
-        }
-
-        @Override
-        public long getItemId(int position) {
-            return 0;
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            return null;
-        }
-    }
-
-    public class DeviceListAdapter extends BaseAdapter {
-
-        private final Context mContext;
-        private final Map<String, Neblina> mNebDevices = new HashMap<String, Neblina>();
-
-        public DeviceListAdapter(Context context, int textViewResourceId) {//}, ArrayList<Neblina> devices) {
-            //super(context, textViewResourceId);
-            mContext = context;
-        }
-
-        public void addItem(Neblina dev) {
-            if (mNebDevices.containsKey(dev.toString()) == false) {
-                mNebDevices.put(dev.toString(), dev);
-                Log.w("BLUETOOTH DEBUG", "Item added " + dev.toString());
-            }
-        }
-
-        @Override
-        public int getCount() {
-            return mNebDevices.size();
-        }
-
-        @Override
-        public Object getItem(int position) {
-            return mNebDevices.values().toArray()[position];
-        }
-
-        @Override
-        public long getItemId(int position) {
-            return 0;
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-
-            if (convertView == null) {
-                LayoutInflater inflater = LayoutInflater.from(mContext);
-                convertView = inflater.inflate(R.layout.nebdevice_list_content, parent, false);
-            }
-
-            TextView textView = (TextView) convertView.findViewById(R.id.id);
-            //ImageView imageView = (ImageView) rowView.findViewById(R.id.icon);
-            if (mNebDevices.size() > position) {
-                textView.setText(mNebDevices.values().toArray()[position].toString());
-            }
-
-            return convertView;
-        }
-
-    }
-
-    public void didConnectNeblina(Neblina sender) {
+    public void didConnectNeblina(NeblinaDevice sender) {
         Log.w("BLUETOOTH DEBUG", "Connected " + sender.toString());
         // Enable Quaternion Stream
 
@@ -251,50 +194,57 @@ public class MainActivity extends AppCompatActivity implements NeblinaDelegate {
          sender.streamQuaternion(true);
 
     }
-    public void didReceiveResponsePacket(Neblina sender, int subsystem, int cmdRspId, byte[] data, int dataLen) {
+    public void didReceiveResponsePacket(NeblinaDevice sender, int subsystem, int cmdRspId, byte[] data, int dataLen) {
 
     }
-    public void didReceiveRSSI(Neblina sender, int rssi) {
+    public void didReceiveRSSI(NeblinaDevice sender, int rssi) {
 
     }
-    public void didReceiveGeneralData(Neblina sender, int respType, int cmdRspId, byte[] data, int dataLen, boolean errFlag) {
+    public void didReceiveGeneralData(NeblinaDevice sender, int respType, int cmdRspId, byte[] data, int dataLen, boolean errFlag) {
 
     }
-    public void didReceiveFusionData(Neblina sender, int respType, int cmdRspId, byte[] data, int dataLen, boolean errFlag) {
+    public void didReceiveFusionData(NeblinaDevice sender, int respType, int cmdRspId, byte[] data, int dataLen, boolean errFlag) {
         switch (cmdRspId) {
             case Neblina.NEBLINA_COMMAND_FUSION_QUATERNION_STREAM:
-                int timeStamp = (int)data[0] | ((int)data[1] << 8) | ((int)data[2] << 16) | ((int)data[3] << 24);
-                double q1 = ((double)((int)data[4] | ((int)data[5] << 8))) / 32768.0;
-                double q2 = ((double)((int)data[6] | ((int)data[7] << 8))) / 32768.0;
-                double q3 = ((double)((int)data[8] | ((int)data[9] << 8))) / 32768.0;
-                double q4 = ((double)((int)data[10] | ((int)data[11] << 8))) / 32768.0;
+                //int timeStamp = (int)data[0] | ((int)data[1] << 8) | ((int)data[2] << 16) | ((int)data[3] << 24);
+                long timeStamp = NeblinaUtilities.convertByteToUnsignedInt(data[0], data[1], data[2], data[3]);
+                double q1 = NeblinaUtilities.convertByteToUnsignedShort(data[4], data[5]) / 32768.0;
+                double q2 = NeblinaUtilities.convertByteToUnsignedShort(data[6], data[7]) / 32768.0;
+                double q3 = NeblinaUtilities.convertByteToUnsignedShort(data[8], data[9]) / 32768.0;
+                double q4 = NeblinaUtilities.convertByteToUnsignedShort(data[10], data[11]) / 32768.0;
 
-                String s = String.format("T : %d - (%f, %f, %f, %f)", timeStamp, q1, q2, q3, q4);
+                final String s = String.format("T : %d - (%.3f, %.3f, %.3f, %.3f)", timeStamp, q1, q2, q3, q4);
                 Log.w("BLUETOOTH DEBUG", s);
-                TextView txtView = (TextView) findViewById(R.id.text_view);
-                txtView.setText(s);
-                //mTextView.getRootView().invalidate();
-                txtView.getRootView().postInvalidate();
+
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                       TextView txtView = (TextView) findViewById(R.id.text_view);
+                       txtView.setText(s);
+                       //mTextView.getRootView().invalidate();
+                       txtView.getRootView().postInvalidate();
+                   }
+                });
 
                 break;
         }
     }
-    public void didReceivePmgntData(Neblina sender, int respType, int cmdRspId, byte[] data, int dataLen, boolean errFlag) {
+    public void didReceivePmgntData(NeblinaDevice sender, int respType, int cmdRspId, byte[] data, int dataLen, boolean errFlag) {
 
     }
-    public void didReceiveLedData(Neblina sender, int respType, int cmdRspId, byte[] data, int dataLen, boolean errFlag) {
+    public void didReceiveLedData(NeblinaDevice sender, int respType, int cmdRspId, byte[] data, int dataLen, boolean errFlag) {
 
     }
-    public void didReceiveDebugData(Neblina sender, int respType, int cmdRspId, byte[] data, int dataLen, boolean errFlag) {
+    public void didReceiveDebugData(NeblinaDevice sender, int respType, int cmdRspId, byte[] data, int dataLen, boolean errFlag) {
 
     }
-    public void didReceiveRecorderData(Neblina sender, int respType, int cmdRspId, byte[] data, int dataLen, boolean errFlag) {
+    public void didReceiveRecorderData(NeblinaDevice sender, int respType, int cmdRspId, byte[] data, int dataLen, boolean errFlag) {
 
     }
-    public void didReceiveEepromData(Neblina sender, int respType, int cmdRspId, byte[] data, int dataLen, boolean errFlag) {
+    public void didReceiveEepromData(NeblinaDevice sender, int respType, int cmdRspId, byte[] data, int dataLen, boolean errFlag) {
 
     }
-    public void didReceiveSensorData(Neblina sender, int respType, int cmdRspId, byte[] data, int dataLen, boolean errFlag) {
+    public void didReceiveSensorData(NeblinaDevice sender, int respType, int cmdRspId, byte[] data, int dataLen, boolean errFlag) {
 
     }
 }
