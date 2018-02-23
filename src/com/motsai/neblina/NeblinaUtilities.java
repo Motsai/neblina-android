@@ -26,6 +26,10 @@ public class NeblinaUtilities {
         return (byte)crc;
     }
 
+    static public byte convertBoolToByte(boolean p1) {
+        return (byte)(p1 ? 1 : 0);
+    }
+
     static public short convertByteToUnsignedShort(byte p1, byte p2) {
         return (short)((p1 & 0xFF) | ((p2 & 0xFF) << 8));
     }

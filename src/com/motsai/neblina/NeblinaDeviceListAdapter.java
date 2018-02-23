@@ -20,7 +20,7 @@ public abstract class NeblinaDeviceListAdapter extends BaseAdapter {
     }
 
     public void addItem(NeblinaDevice dev) {
-        if (mDevices.containsKey(dev.toString()) == false) {
+        if (!mDevices.containsKey(dev.toString())) {
             mDevices.put(dev.toString(), dev);
             Log.w("BLUETOOTH DEBUG", "Item added " + dev.toString());
         }
