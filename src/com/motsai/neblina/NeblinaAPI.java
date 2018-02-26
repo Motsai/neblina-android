@@ -1,7 +1,9 @@
 package com.motsai.neblina;
 
 import android.bluetooth.BluetoothManager;
+import android.content.Context;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public class NeblinaAPI {
@@ -10,22 +12,16 @@ public class NeblinaAPI {
 
     public NeblinaAPI(BluetoothManager bluetoothManager) {
         mCore = new NeblinaCore(bluetoothManager);
+        mSendingPool = new HashMap<String, NeblinaDevice>();
     }
 
-    public void addDeviceToSendingPool(String key) {
-        NeblinaDevice device = mCore.getDevice(key);
-        if (device != null) {
-            mSendingPool.put(key, device);
-        }
-    }
-
-    public void removeDeviceFromSendingPool(String key) {
-        mSendingPool.remove(key);
-    }
+    // General functions
 
     public void setCallback(NeblinaCallback callback) {
         mCore.setCallback(callback);
     }
+
+    // Discovery functions
 
     public void startDiscovery() {
         mCore.startDiscovery();
@@ -34,6 +30,20 @@ public class NeblinaAPI {
     public void stopDiscovery() {
         mCore.stopDiscovery();
     }
+
+    // Sending pool functions
+
+    public void addDeviceToSendingPool(NeblinaDevice device) {
+        if (device != null) {
+            mSendingPool.put(device.toString(), device);
+        }
+    }
+
+    public void removeDeviceFromSendingPool(NeblinaDevice device) {
+        mSendingPool.remove(device.toString());
+    }
+
+
 
     // Communication API
 

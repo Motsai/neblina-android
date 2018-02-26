@@ -135,13 +135,13 @@ public class MainActivity extends AppCompatActivity {
                     mQuatSwitch.setChecked(true);
                 }
             });
-            mNeblinaAPI.addDeviceToSendingPool(sender.toString());
+            mNeblinaAPI.addDeviceToSendingPool(sender);
             mNeblinaAPI.streamQuaternion(true);
         }
 
         public void deviceDisconnected(NeblinaDevice sender) {
             Log.w("BLUETOOTH", "Disconnected: " + sender.toString());
-            mNeblinaAPI.removeDeviceFromSendingPool(sender.toString());
+            mNeblinaAPI.removeDeviceFromSendingPool(sender);
         }
 
         public void didReceiveFusionData(NeblinaDevice sender, int respType, int cmdRspId, byte[] data, int dataLen, boolean errFlag) {
