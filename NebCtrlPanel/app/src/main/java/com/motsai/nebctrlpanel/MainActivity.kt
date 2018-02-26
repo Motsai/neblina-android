@@ -38,12 +38,15 @@ import fr.arnaudguyon.smartgl.touch.TouchHelperEvent
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlin.experimental.or
 
-class MainActivity : AppCompatActivity(), NeblinaDelegate, SmartGLViewController {
+class MainActivity : AppCompatActivity(), SmartGLViewController {
+    private var mNeblinaAPI: NeblinaAPI? = null
+    private var mNeblinaCallback: AppNeblinaCallback? = AppNeblinaCallback()
+
     private var mBluetoothAdapter: BluetoothAdapter? = null
     private val mHandler: Handler? = null
     private var mLEScanner: BluetoothLeScanner? = null
     private var mAdapter: DeviceListAdapter? = null
-    private var mDev: Neblina? = null
+    private var mDev: NeblinaDevice? = null
     private var mCmdListView: ListView? = null
     private var mTextLine1: TextView? = null
     private var mTextLine2: TextView? = null
@@ -134,10 +137,24 @@ class MainActivity : AppCompatActivity(), NeblinaDelegate, SmartGLViewController
         glview.setController(this)
 
         val bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+        mNeblinaAPI = NeblinaAPI(bluetoothManager)
+        mNeblinaAPI!!.setCallback(mNeblinaCallback!!)
 
-        mBluetoothAdapter = bluetoothManager.adapter
-        mLEScanner = mBluetoothAdapter!!.getBluetoothLeScanner()
-        mAdapter = DeviceListAdapter(this, R.layout.nebdevice_list_content)//android.R.layout.simple_list_item_1);
+        mAdapter = DeviceListAdapter(this)
+        val listView = findViewById<View>(R.id.founddevice_listView) as ListView
+        listView.adapter = mAdapter
+        listView.onItemClickListener = AdapterView.OnItemClickListener { parent, view, position, id ->
+            val adapter = parent.adapter as DeviceListAdapter
+            mNeblinaAPI!!.stopDiscovery()
+            if (mDev != null) {
+                mDev!!.disconnect()
+            }
+
+            mDev = adapter.getItem(position) as NeblinaDevice
+            mDev!!.connect(baseContext, false)
+        }
+
+
         mTextLine1 = findViewById<View>(R.id.textView1) as TextView
         mTextLine2 = findViewById<View>(R.id.textView2) as TextView
         mTextLine3 = findViewById<View>(R.id.textView3) as TextView
@@ -162,21 +179,6 @@ class MainActivity : AppCompatActivity(), NeblinaDelegate, SmartGLViewController
             }
         })
 
-        val listView = findViewById<View>(R.id.founddevice_listView) as ListView
-        listView.adapter = mAdapter
-        listView.onItemClickListener = AdapterView.OnItemClickListener { parent, view, position, id ->
-            val adapter = parent.adapter as DeviceListAdapter
-            mLEScanner!!.stopScan(mScanCallback)
-            if (mDev != null) {
-                mDev!!.Disconnect()
-            }
-
-            mDev = adapter.getItem(position) as Neblina
-            mDev!!.SetDelegate(this@MainActivity)
-            mDev!!.Connect(baseContext)
-        }
-
-
         mCmdListView = findViewById<View>(R.id.cmd_listView) as ListView
 
         val adapter = CmdListAdapter(this,
@@ -187,9 +189,7 @@ class MainActivity : AppCompatActivity(), NeblinaDelegate, SmartGLViewController
         mCmdListView!!.setOnScrollListener(object : AbsListView.OnScrollListener {
             override fun onScrollStateChanged(view: AbsListView, scrollState: Int) {
                 if (scrollState == AbsListView.OnScrollListener.SCROLL_STATE_IDLE) {
-                    if (mDev != null) {
-                        mDev!!.getSystemStatus()
-                    }
+                    mNeblinaAPI!!.getSystemStatus()
                 }
             }
 
@@ -199,72 +199,10 @@ class MainActivity : AppCompatActivity(), NeblinaDelegate, SmartGLViewController
         }
         )
 
-        mLEScanner!!.startScan(mScanCallback)
+        mNeblinaAPI!!.startDiscovery()
     }
 
-    private val mScanCallback = object : ScanCallback() {
-        override fun onScanResult(callbackType: Int, result: ScanResult) {
-            val device = result.device
-            val scanRecord = result.scanRecord
-            val scanData = scanRecord!!.bytes
-            var name = scanRecord.deviceName
-            var deviceID: Long = 0
-            val manuf = scanRecord.getManufacturerSpecificData(0x0274)
-
-
-            if (name == null)
-                name = device.name
-
-            if (name == null || manuf == null || manuf.size < 8)
-                return
-
-
-            val x = ByteBuffer.wrap(manuf)
-            x.order(ByteOrder.LITTLE_ENDIAN)
-            deviceID = x.long
-
-
-            val listView = findViewById<View>(R.id.founddevice_listView) as ListView
-            val r = listView.adapter as DeviceListAdapter
-            mAdapter!!.addItem(Neblina(name, deviceID, device))
-            mAdapter!!.notifyDataSetChanged()
-
-        }
-
-        override fun onBatchScanResults(results: List<ScanResult>) {
-            for (sr in results) {
-                Log.i("ScanResult - Results", sr.toString())
-            }
-        }
-
-        override fun onScanFailed(errorCode: Int) {
-            Log.e("Scan Failed", "Error Code: " + errorCode)
-        }
-    }
-
-    inner class DeviceListAdapter(private val mContext: Context, textViewResourceId: Int)//}, ArrayList<Neblina> devices) {
-    //super(context, textViewResourceId);
-        : BaseAdapter() {
-        private val mNebDevices = HashMap<String, Neblina>()
-
-        fun addItem(dev: Neblina) {
-            if (mNebDevices.containsKey(dev.toString()) == false) {
-                mNebDevices.put(dev.toString(), dev)
-                Log.w("BLUETOOTH DEBUG", "Item added " + dev.toString())
-            }
-        }
-
-        override fun getCount(): Int {
-            return mNebDevices.size
-        }
-
-        override fun getItem(position: Int): Any {
-            return mNebDevices.values.toTypedArray()[position]
-        }
-
-        override fun getItemId(position: Int): Long {
-            return 0
-        }
+    inner class DeviceListAdapter(private val mContext: Context) : NeblinaDeviceListAdapter() {
 
         override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
             var convertView = convertView
@@ -276,8 +214,8 @@ class MainActivity : AppCompatActivity(), NeblinaDelegate, SmartGLViewController
 
             val textView = convertView!!.findViewById<View>(R.id.id) as TextView
             //ImageView imageView = (ImageView) rowView.findViewById(R.id.icon);
-            if (mNebDevices.size > position) {
-                textView.text = mNebDevices.values.toTypedArray()[position].toString()
+            if (getCount() > position) {
+                textView.text = getItem(position).toString()
             }
 
             return convertView
@@ -294,9 +232,9 @@ class MainActivity : AppCompatActivity(), NeblinaDelegate, SmartGLViewController
         when (cmdList[idx].mSubSysId) {
             Neblina.NEBLINA_SUBSYSTEM_GENERAL -> when (cmdList[idx].mCmdId) {
                 Neblina.NEBLINA_COMMAND_GENERAL_INTERFACE_STATE -> if (isChecked)
-                    mDev!!.setDataPort(idx, 1.toByte().toInt())
+                    mNeblinaAPI!!.setDataPort(idx, 1.toByte().toInt())
                 else
-                    mDev!!.setDataPort(idx, 0.toByte().toInt())
+                    mNeblinaAPI!!.setDataPort(idx, 0.toByte().toInt())
                 else -> {
                 }
             }
@@ -306,65 +244,62 @@ class MainActivity : AppCompatActivity(), NeblinaDelegate, SmartGLViewController
                 }
                 Neblina.NEBLINA_COMMAND_FUSION_DOWNSAMPLE -> {
                 }
-                Neblina.NEBLINA_COMMAND_FUSION_MOTION_STATE_STREAM -> mDev!!.streamMotionState(isChecked)
+                Neblina.NEBLINA_COMMAND_FUSION_MOTION_STATE_STREAM -> mNeblinaAPI!!.streamMotionState(isChecked)
                 Neblina.NEBLINA_COMMAND_FUSION_QUATERNION_STREAM -> {
-                    mDev!!.streamEulerAngle(false)
-                    mDev!!.streamQuaternion(isChecked)
+                    mNeblinaAPI!!.streamEulerAngle(false)
+                    mNeblinaAPI!!.streamQuaternion(isChecked)
                 }
                 Neblina.NEBLINA_COMMAND_FUSION_EULER_ANGLE_STREAM -> {
-                    mDev!!.streamQuaternion(false)
-                    mDev!!.streamEulerAngle(isChecked)
+                    mNeblinaAPI!!.streamQuaternion(false)
+                    mNeblinaAPI!!.streamEulerAngle(isChecked)
                 }
-                Neblina.NEBLINA_COMMAND_FUSION_EXTERNAL_FORCE_STREAM -> mDev!!.streamExternalForce(isChecked)
+                Neblina.NEBLINA_COMMAND_FUSION_EXTERNAL_FORCE_STREAM -> mNeblinaAPI!!.streamExternalForce(isChecked)
                 Neblina.NEBLINA_COMMAND_FUSION_FUSION_TYPE -> if (isChecked)
-                    mDev!!.setFusionType(1.toByte())
+                    mNeblinaAPI!!.setFusionType(1.toByte())
                 else
-                    mDev!!.setFusionType(0.toByte())
+                    mNeblinaAPI!!.setFusionType(0.toByte())
                 Neblina.NEBLINA_COMMAND_FUSION_TRAJECTORY_RECORD -> {
                 }
                 Neblina.NEBLINA_COMMAND_FUSION_TRAJECTORY_INFO_STREAM -> {
                 }
-                Neblina.NEBLINA_COMMAND_FUSION_PEDOMETER_STREAM -> mDev!!.streamPedometer(isChecked)
+                Neblina.NEBLINA_COMMAND_FUSION_PEDOMETER_STREAM -> mNeblinaAPI!!.streamPedometer(isChecked)
                 Neblina.NEBLINA_COMMAND_FUSION_SITTING_STANDING_STREAM -> {
                 }
                 Neblina.NEBLINA_COMMAND_FUSION_LOCK_HEADING_REFERENCE -> {
                 }
                 Neblina.NEBLINA_COMMAND_FUSION_FINGER_GESTURE_STREAM -> {
                 }
-                Neblina.NEBLINA_COMMAND_FUSION_ROTATION_INFO_STREAM -> mDev!!.streamRotationInfo(isChecked)
+                Neblina.NEBLINA_COMMAND_FUSION_ROTATION_INFO_STREAM -> mNeblinaAPI!!.streamRotationInfo(isChecked)
                 Neblina.NEBLINA_COMMAND_FUSION_EXTERNAL_HEADING_CORRECTION -> {
                 }
             }
             Neblina.NEBLINA_SUBSYSTEM_SENSOR -> when (cmdList[idx].mCmdId) {
-                Neblina.NEBLINA_COMMAND_SENSOR_ACCELEROMETER_STREAM -> mDev!!.sensorStreamAccelData(isChecked)
-                Neblina.NEBLINA_COMMAND_SENSOR_GYROSCOPE_STREAM -> mDev!!.sensorStreamGyroData(isChecked)
-                Neblina.NEBLINA_COMMAND_SENSOR_HUMIDITY_STREAM -> mDev!!.sensorStreamHumidityData(isChecked)
-                Neblina.NEBLINA_COMMAND_SENSOR_MAGNETOMETER_STREAM -> mDev!!.sensorStreamMagData(isChecked)
-                Neblina.NEBLINA_COMMAND_SENSOR_PRESSURE_STREAM -> mDev!!.sensorStreamPressureData(isChecked)
-                Neblina.NEBLINA_COMMAND_SENSOR_TEMPERATURE_STREAM -> mDev!!.sensorStreamTemperatureData(isChecked)
-                Neblina.NEBLINA_COMMAND_SENSOR_ACCELEROMETER_GYROSCOPE_STREAM -> mDev!!.sensorStreamAccelGyroData(isChecked)
-                Neblina.NEBLINA_COMMAND_SENSOR_ACCELEROMETER_MAGNETOMETER_STREAM -> mDev!!.sensorStreamAccelMagData(isChecked)
+                Neblina.NEBLINA_COMMAND_SENSOR_ACCELEROMETER_STREAM -> mNeblinaAPI!!.sensorStreamAccelData(isChecked)
+                Neblina.NEBLINA_COMMAND_SENSOR_GYROSCOPE_STREAM -> mNeblinaAPI!!.sensorStreamGyroData(isChecked)
+                Neblina.NEBLINA_COMMAND_SENSOR_HUMIDITY_STREAM -> mNeblinaAPI!!.sensorStreamHumidityData(isChecked)
+                Neblina.NEBLINA_COMMAND_SENSOR_MAGNETOMETER_STREAM -> mNeblinaAPI!!.sensorStreamMagData(isChecked)
+                Neblina.NEBLINA_COMMAND_SENSOR_PRESSURE_STREAM -> mNeblinaAPI!!.sensorStreamPressureData(isChecked)
+                Neblina.NEBLINA_COMMAND_SENSOR_TEMPERATURE_STREAM -> mNeblinaAPI!!.sensorStreamTemperatureData(isChecked)
+                Neblina.NEBLINA_COMMAND_SENSOR_ACCELEROMETER_GYROSCOPE_STREAM -> mNeblinaAPI!!.sensorStreamAccelGyroData(isChecked)
+                Neblina.NEBLINA_COMMAND_SENSOR_ACCELEROMETER_MAGNETOMETER_STREAM -> mNeblinaAPI!!.sensorStreamAccelMagData(isChecked)
                 else -> {
                 }
             }
 
             Neblina.NEBLINA_SUBSYSTEM_RECORDER -> when (cmdList[idx].mCmdId) {
-                Neblina.NEBLINA_COMMAND_RECORDER_PLAYBACK -> mDev!!.sessionPlayback(isChecked, 0.toShort())
+                Neblina.NEBLINA_COMMAND_RECORDER_PLAYBACK -> mNeblinaAPI!!.sessionPlayback(isChecked, 0.toShort())
             }
 
             0xf.toByte() -> when (cmdList[idx].mCmdId) {
                 2.toByte() -> {
                     //                        if (isChecked) {
-                    mDev!!.sessionRecord(isChecked)
-                    mDev!!.sensorStreamAccelGyroData(isChecked)
-                    mDev!!.sensorStreamMagData(isChecked)
-                    mDev!!.sensorStreamPressureData(isChecked)
-                    mDev!!.sensorStreamTemperatureData(isChecked)
+                    mNeblinaAPI!!.sessionRecord(isChecked)
+                    mNeblinaAPI!!.sensorStreamAccelGyroData(isChecked)
+                    mNeblinaAPI!!.sensorStreamMagData(isChecked)
+                    mNeblinaAPI!!.sensorStreamPressureData(isChecked)
+                    mNeblinaAPI!!.sensorStreamTemperatureData(isChecked)
                 }
-            }//                      }
-        //                      else {
-        //                         mDev.sessionRecord(isChecked);
-        //                     }
+            }
         }
     }
 
@@ -375,13 +310,13 @@ class MainActivity : AppCompatActivity(), NeblinaDelegate, SmartGLViewController
 
         when (cmdList[idx].mSubSysId) {
             Neblina.NEBLINA_SUBSYSTEM_EEPROM -> when (cmdList[idx].mCmdId) {
-                Neblina.NEBLINA_COMMAND_EEPROM_READ -> mDev!!.eepromRead(0.toShort())
+                Neblina.NEBLINA_COMMAND_EEPROM_READ -> mNeblinaAPI!!.eepromRead(0.toShort())
                 Neblina.NEBLINA_COMMAND_EEPROM_WRITE -> {
                 }
             }
             Neblina.NEBLINA_SUBSYSTEM_FUSION -> when (cmdList[idx].mCmdId) {
-                Neblina.NEBLINA_COMMAND_FUSION_CALIBRATE_FORWARD_POSITION -> mDev!!.calibrateForwardPosition()
-                Neblina.NEBLINA_COMMAND_FUSION_CALIBRATE_DOWN_POSITION -> mDev!!.calibrateDownPosition()
+                Neblina.NEBLINA_COMMAND_FUSION_CALIBRATE_FORWARD_POSITION -> mNeblinaAPI!!.calibrateForwardPosition()
+                Neblina.NEBLINA_COMMAND_FUSION_CALIBRATE_DOWN_POSITION -> mNeblinaAPI!!.calibrateDownPosition()
             }
             Neblina.NEBLINA_SUBSYSTEM_RECORDER -> when (cmdList[idx].mCmdId) {
                 Neblina.NEBLINA_COMMAND_RECORDER_ERASE_ALL -> if (mFlashEraseProgress == false) {
@@ -390,12 +325,12 @@ class MainActivity : AppCompatActivity(), NeblinaDelegate, SmartGLViewController
                     mTextLine3!!.setText("Erasing...")
                     mTextLine3!!.getRootView().postInvalidate()
 
-                    mDev!!.eraseStorage(false)
+                    mNeblinaAPI!!.eraseStorage(false)
                 }
                 Neblina.NEBLINA_COMMAND_RECORDER_RECORD -> if (cmdList[idx].mActiveStatus == 0) {
-                    mDev!!.sessionRecord(false)
+                    mNeblinaAPI!!.sessionRecord(false)
                 } else {
-                    mDev!!.sessionRecord(true)
+                    mNeblinaAPI!!.sessionRecord(true)
                 }
                 Neblina.NEBLINA_COMMAND_RECORDER_SESSION_DOWNLOAD -> {
                 }
@@ -405,14 +340,14 @@ class MainActivity : AppCompatActivity(), NeblinaDelegate, SmartGLViewController
             0xFF.toByte() -> if (cmdList[idx].mCmdId.toInt() == 1)
             //start stream/record
             {
-                mDev!!.streamQuaternion(true)
+                mNeblinaAPI!!.streamQuaternion(true)
                 //mNedDev.streamIMU(true);
-                mDev!!.sessionRecord(true)
+                mNeblinaAPI!!.sessionRecord(true)
             } else
             //stop stream/record
             {
-                mDev!!.disableStreaming()
-                mDev!!.sessionRecord(false)
+                mNeblinaAPI!!.disableStreaming()
+                mNeblinaAPI!!.sessionRecord(false)
             }
         }
     }
@@ -461,224 +396,6 @@ class MainActivity : AppCompatActivity(), NeblinaDelegate, SmartGLViewController
         }
     }
 
-
-    override fun didConnectNeblina(sender: Neblina?) {
-        Log.w("BLUETOOTH DEBUG", "Connected " + sender.toString())
-
-        sender?.getSystemStatus()
-        sender?.getFirmwareVersion()
-    }
-
-    override fun didReceiveResponsePacket(sender: Neblina?, subsystem: Int, cmdRspId: Int, data: ByteArray?, dataLen: Int) {
-        when (subsystem) {
-            Neblina.NEBLINA_SUBSYSTEM_GENERAL.toInt() -> {
-                when (cmdRspId) {
-                    Neblina.NEBLINA_COMMAND_GENERAL_SYSTEM_STATUS.toInt() -> {
-                        runOnUiThread { updateUI(data) }
-                        //updateUI(data);
-                    }
-                    Neblina.NEBLINA_COMMAND_GENERAL_FIRMWARE_VERSION.toInt() -> {
-                        runOnUiThread {
-                            val b = (data!![4].toInt() and 0xFF) or ((data!![5].toInt() and 0xFF) shl 8) or ((data!![6].toInt() and 0xFF) shl 16) as Int
-                            val s = String.format("API:%d, FW:%d.%d.%d-%d", data!![0], data[1], data[2], data[3], b)
-                            val tv = findViewById<View>(R.id.version_TextView) as TextView
-                            tv.text = s
-                            tv.rootView.postInvalidate()
-                        }
-                    }
-                }
-                when (cmdRspId) {
-                    Neblina.NEBLINA_COMMAND_FUSION_QUATERNION_STREAM.toInt() -> {
-                        mQuatRate = data!![2].toInt() or (data[3].toInt() shl 8)
-                        mQuatPeriod = 1000000 / mQuatRate
-                    }
-                }
-            }
-            Neblina.NEBLINA_SUBSYSTEM_FUSION.toInt() -> when (cmdRspId) {
-                Neblina.NEBLINA_COMMAND_FUSION_QUATERNION_STREAM.toInt() -> {
-                    mQuatRate = data!![2].toInt() or (data[3].toInt() shl 8)
-                    mQuatPeriod = 1000000 / mQuatRate
-                }
-            }
-            Neblina.NEBLINA_SUBSYSTEM_SENSOR.toInt() -> {
-            }
-            Neblina.NEBLINA_SUBSYSTEM_RECORDER.toInt() -> when (cmdRspId) {
-                Neblina.NEBLINA_COMMAND_RECORDER_ERASE_ALL.toInt() -> {
-                    runOnUiThread {
-                        mTextLine3!!.setText("Flash erased")
-                        mTextLine3!!.getRootView().postInvalidate()
-                    }
-                    mFlashEraseProgress = false
-                }
-            }
-        }
-    }
-
-    override fun didReceiveRSSI(sender: Neblina?, rssi: Int) {
-   //     TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun didReceiveGeneralData(sender: Neblina?, respType: Int, cmdRspId: Int, data: ByteArray?, dataLen: Int, errFlag: Boolean) {
-        when (cmdRspId) {
-            Neblina.NEBLINA_COMMAND_GENERAL_SYSTEM_STATUS.toInt() -> {
-                runOnUiThread { updateUI(data) }
-                //updateUI(data);
-            }
-        }
-    }
-
-    override fun didReceiveFusionData(sender: Neblina?, respType: Int, cmdRspId: Int, data: ByteArray?, dataLen: Int, errFlag: Boolean) {
-        val timeStamp = data!![0].toLong() and 0xFF or (data[1].toLong() and 0xFF shl 8) or (data[2].toLong() and 0xFF shl 16) or (data[3].toLong() and 0xFF shl 24)
-        when (cmdRspId) {
-            Neblina.NEBLINA_COMMAND_FUSION_EULER_ANGLE_STREAM.toInt() -> {
-                val rotx = ((data[4].toInt() and 0xFF) or ((data[5].toInt() and 0xFF) shl 8)).toDouble() / 10.0
-                val roty = ((data[6].toInt() and 0xFF) or ((data[7].toInt() and 0xFF) shl 8)).toDouble() / 10.0
-                val rotz = ((data[8].toInt() and 0xFF) or ((data[9].toInt() and 0xFF) shl 8)).toDouble() / 10.0
-
-                runOnUiThread {
-                    val s = String.format("Euler : T : %d - (Yaw : %f, Ptich : %f, Roll : %f)", timeStamp, rotx, roty, rotz)
-                    //Log.w("BLUETOOTH DEBUG", s);
-                    mTextLine1!!.setText(s)
-                    mTextLine1!!.getRootView().postInvalidate()
-                }
-                //val controler = mActivityGLView!!.controller as GLViewController
-                //controler.setQuaternion(0.0.toFloat(), rotx.toFloat(), roty.toFloat(), rotz.toFloat())
-            }
-            Neblina.NEBLINA_COMMAND_FUSION_QUATERNION_STREAM.toInt() -> {
-                val q1 = (((data[4].toInt() and 0xFF) or ((data[5].toInt() and 0xFF) shl 8)).toShort()).toDouble() / 32768.0
-                val q2 = (((data[6].toInt() and 0x00FF) or ((data[7].toInt() and 0x00FF) shl 8)).toShort()).toDouble() / 32768.0
-                val q3 = (((data[8].toInt() and 0x00FF) or ((data[9].toInt() and 0x00FF) shl 8)).toShort()).toDouble() / 32768.0
-                val q4 = (((data[10].toInt() and 0x00FF) or ((data[11].toInt() and 0x00FF) shl 8)).toShort()).toDouble() / 32768.0
-                //val q1 = (data[4] as Short and 0xFF as Short) or (data[5] as Short and 0xFF shl 8)) / 32768.0
-                runOnUiThread {
-
-                    val s = String.format("Quat: T : %d - (%.2f, %.2f, %.2f, %.2f)", timeStamp, q1, q2, q3, q4)
-                    mTextLine1!!.setText(s)
-                    mTextLine1!!.getRootView().postInvalidate()
-
-                    mCur3DObj?.setQuaternion(q1.toFloat(), q2.toFloat(), q3.toFloat(), q4.toFloat())
-                    //mShip?.setQuaternion(q1.toFloat(), q2.toFloat(), q3.toFloat(), q4.toFloat())
-                    //mCube?.setQuaternion(q1.toFloat(), q2.toFloat(), q3.toFloat(), q4.toFloat())
-                }
-
-                //ByteBuffer ar = ByteBuffer.wrap(data);
-
-                //int ts = (data[0] & 0xFF) | ((data[1] & 0xFF) << 8) | ((data[2] & 0xFF) << 16) | ((data[3] & 0xFF) << 24);
-                var dt: Long = 0
-                if (timeStamp == mQuatTimeStamp) {
-                    mQuatBdCnt++
-                }
-                if (timeStamp > mQuatTimeStamp) {
-                    dt = timeStamp - mQuatTimeStamp
-                } else {
-                    dt = -0x1.toLong() - mQuatTimeStamp + timeStamp
-                }
-
-                if (dt < 0) {
-                    dt = -dt
-                }
-                if (dt > mQuatPeriod + (mQuatPeriod shr 1) || dt < mQuatPeriod - (mQuatPeriod shr 1)) {
-                    mQuatDropCnt++
-                }
-                mQuatCnt++
-
-
-                val finalDt = dt
-                runOnUiThread {
-                    val s = String.format("%d, %d %d %d", finalDt, mQuatCnt, mQuatDropCnt, mQuatBdCnt)
-                    mTextLine2!!.setText(s)
-                    mTextLine2!!.getRootView().postInvalidate()
-
-                }
-                mQuatTimeStamp = timeStamp
-            }
-        }
-    }
-
-    override fun didReceivePmgntData(sender: Neblina?, respType: Int, cmdRspId: Int, data: ByteArray?, dataLen: Int, errFlag: Boolean) {
-       // TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun didReceiveLedData(sender: Neblina?, respType: Int, cmdRspId: Int, data: ByteArray?, dataLen: Int, errFlag: Boolean) {
-       // TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun didReceiveDebugData(sender: Neblina?, respType: Int, cmdRspId: Int, data: ByteArray?, dataLen: Int, errFlag: Boolean) {
-       /// TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun didReceiveRecorderData(sender: Neblina?, respType: Int, cmdRspId: Int, data: ByteArray?, dataLen: Int, errFlag: Boolean) {
-       // TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun didReceiveEepromData(sender: Neblina?, respType: Int, cmdRspId: Int, data: ByteArray?, dataLen: Int, errFlag: Boolean) {
-       // TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun didReceiveSensorData(sender: Neblina?, respType: Int, cmdRspId: Int, data: ByteArray?, dataLen: Int, errFlag: Boolean) {
-        val timeStamp = data!![0].toLong() and 0xFF or (data[1].toLong() and 0xFF shl 8) or (data[2].toLong() and 0xFF shl 16) or (data[3].toLong() and 0xFF shl 24)
-        when (cmdRspId) {
-            Neblina.NEBLINA_COMMAND_SENSOR_ACCELEROMETER_STREAM.toInt() -> {
-                val x = data[4].toInt() and 0xff or (data[5].toInt() shl 8)
-                val y = data[6].toInt() and 0xff or (data[7].toInt() shl 8)
-                val z = data[8].toInt() and 0xff or (data[9].toInt() shl 8)
-                runOnUiThread {
-                    val s = String.format("Accel : %d - (%d, %d, %d)", timeStamp, x, y, z)
-                    //Log.w("BLUETOOTH DEBUG", s);
-                    mTextLine1!!.setText(s)
-                    mTextLine1!!.getRootView().postInvalidate()
-                }
-            }
-            Neblina.NEBLINA_COMMAND_SENSOR_GYROSCOPE_STREAM.toInt() -> {
-                val x = data[4].toInt() and 0xff or (data[5].toInt() shl 8)
-                val y = data[6].toInt() and 0xff or (data[7].toInt() shl 8)
-                val z = data[8].toInt() and 0xff or (data[9].toInt() shl 8)
-                runOnUiThread {
-                    val s = String.format("Gyro : %d - (%d, %d, %d)", timeStamp, x, y, z)
-                    //Log.w("BLUETOOTH DEBUG", s);
-                    mTextLine1!!.setText(s)
-                    mTextLine1!!.getRootView().postInvalidate()
-                }
-            }
-            Neblina.NEBLINA_COMMAND_SENSOR_HUMIDITY_STREAM.toInt() -> {
-                val x = data[4].toInt() and 0xff or (data[5].toInt() shl 8) or (data[6].toInt() shl 16) or (data[7].toInt() shl 24)
-                val xf = x.toFloat() / 100.0.toFloat()
-                runOnUiThread {
-                    val s = String.format("Humidity : %f %", xf)
-                    //Log.w("BLUETOOTH DEBUG", s);
-                    mTextLine1!!.setText(s)
-                    mTextLine1!!.getRootView().postInvalidate()
-                }
-            }
-            Neblina.NEBLINA_COMMAND_SENSOR_MAGNETOMETER_STREAM.toInt() -> {
-                val x = (data[4].toInt() and 0xff) or ((data[5].toInt() and 0xFF) shl 8)
-                val y = (data[6].toInt() and 0xff) or ((data[7].toInt() and 0xFF) shl 8)
-                val z = (data[8].toInt() and 0xff) or ((data[9].toInt() and 0xFF) shl 8)
-                runOnUiThread {
-                    val s = String.format("Mag : %d - (%d, %d, %d)", timeStamp, x, y, z)
-                    //Log.w("BLUETOOTH DEBUG", s);
-                    mTextLine1!!.setText(s)
-                    mTextLine1!!.getRootView().postInvalidate()
-                }
-            }
-            Neblina.NEBLINA_COMMAND_SENSOR_PRESSURE_STREAM.toInt() -> {
-            }
-            Neblina.NEBLINA_COMMAND_SENSOR_TEMPERATURE_STREAM.toInt() -> {
-                val x = data[4].toInt() and 0xff or (data[5].toInt() shl 8) or (data[6].toInt() shl 16) or (data[7].toInt() shl 24)
-                val xf = x.toFloat() / 100.0.toFloat()
-                runOnUiThread {
-                    val s = String.format("Temp : %f %", xf)
-                    //Log.w("BLUETOOTH DEBUG", s);
-                    mTextLine2!!.setText(s)
-                    mTextLine2!!.getRootView().postInvalidate()
-                }
-            }
-            Neblina.NEBLINA_COMMAND_SENSOR_ACCELEROMETER_GYROSCOPE_STREAM.toInt() -> {
-            }
-            Neblina.NEBLINA_COMMAND_SENSOR_ACCELEROMETER_MAGNETOMETER_STREAM.toInt() -> {
-            }
-        }
-    }
 
     // 3D View
     public override fun onPrepareView(smartGLView: SmartGLView) {
@@ -736,4 +453,237 @@ class MainActivity : AppCompatActivity(), NeblinaDelegate, SmartGLViewController
     }
 
     public override fun onTouchEvent(smartGLView:SmartGLView, event:TouchHelperEvent) {}
+
+    inner class AppNeblinaCallback(): NeblinaCallback() {
+
+        override fun deviceConnected(sender: NeblinaDevice?) {
+            mNeblinaAPI!!.addDeviceToSendingPool(sender)
+            mNeblinaAPI!!.getSystemStatus()
+            mNeblinaAPI!!.getFirmwareVersion()
+        }
+
+        override fun deviceDisconnected(sender: NeblinaDevice?) {
+            mNeblinaAPI!!.removeDeviceFromSendingPool(sender)
+        }
+
+        override fun deviceDiscovered(sender: NeblinaDevice?) {
+            mAdapter!!.addItem(sender)
+            mAdapter!!.notifyDataSetChanged()
+        }
+
+        override fun discoveryStarted() {
+
+        }
+
+        override fun discoveryFinished() {
+
+        }
+
+        override fun didReceiveResponsePacket(sender: NeblinaDevice?, subsystem: Int, cmdRspId: Int, data: ByteArray?, dataLen: Int) {
+            when (subsystem) {
+                Neblina.NEBLINA_SUBSYSTEM_GENERAL.toInt() -> {
+                    when (cmdRspId) {
+                        Neblina.NEBLINA_COMMAND_GENERAL_SYSTEM_STATUS.toInt() -> {
+                            runOnUiThread { updateUI(data) }
+                            //updateUI(data);
+                        }
+                        Neblina.NEBLINA_COMMAND_GENERAL_FIRMWARE_VERSION.toInt() -> {
+                            runOnUiThread {
+                                val b = (data!![4].toInt() and 0xFF) or ((data!![5].toInt() and 0xFF) shl 8) or ((data!![6].toInt() and 0xFF) shl 16) as Int
+                                val s = String.format("API:%d, FW:%d.%d.%d-%d", data!![0], data[1], data[2], data[3], b)
+                                val tv = findViewById<View>(R.id.version_TextView) as TextView
+                                tv.text = s
+                                tv.rootView.postInvalidate()
+                            }
+                        }
+                    }
+                    when (cmdRspId) {
+                        Neblina.NEBLINA_COMMAND_FUSION_QUATERNION_STREAM.toInt() -> {
+                            mQuatRate = data!![2].toInt() or (data[3].toInt() shl 8)
+                            mQuatPeriod = 1000000 / mQuatRate
+                        }
+                    }
+                }
+                Neblina.NEBLINA_SUBSYSTEM_FUSION.toInt() -> when (cmdRspId) {
+                    Neblina.NEBLINA_COMMAND_FUSION_QUATERNION_STREAM.toInt() -> {
+                        mQuatRate = data!![2].toInt() or (data[3].toInt() shl 8)
+                        mQuatPeriod = 1000000 / mQuatRate
+                    }
+                }
+                Neblina.NEBLINA_SUBSYSTEM_SENSOR.toInt() -> {
+                }
+                Neblina.NEBLINA_SUBSYSTEM_RECORDER.toInt() -> when (cmdRspId) {
+                    Neblina.NEBLINA_COMMAND_RECORDER_ERASE_ALL.toInt() -> {
+                        runOnUiThread {
+                            mTextLine3!!.setText("Flash erased")
+                            mTextLine3!!.getRootView().postInvalidate()
+                        }
+                        mFlashEraseProgress = false
+                    }
+                }
+            }
+        }
+
+        override fun didReceiveGeneralData(sender: NeblinaDevice?, respType: Int, cmdRspId: Int, data: ByteArray?, dataLen: Int, errFlag: Boolean) {
+            when (cmdRspId) {
+                Neblina.NEBLINA_COMMAND_GENERAL_SYSTEM_STATUS.toInt() -> {
+                    runOnUiThread { updateUI(data) }
+                    //updateUI(data);
+                }
+            }
+        }
+
+        override fun didReceiveFusionData(sender: NeblinaDevice?, respType: Int, cmdRspId: Int, data: ByteArray?, dataLen: Int, errFlag: Boolean) {
+            val timeStamp = data!![0].toLong() and 0xFF or (data[1].toLong() and 0xFF shl 8) or (data[2].toLong() and 0xFF shl 16) or (data[3].toLong() and 0xFF shl 24)
+            when (cmdRspId) {
+                Neblina.NEBLINA_COMMAND_FUSION_EULER_ANGLE_STREAM.toInt() -> {
+                    val rotx = ((data[4].toInt() and 0xFF) or ((data[5].toInt() and 0xFF) shl 8)).toDouble() / 10.0
+                    val roty = ((data[6].toInt() and 0xFF) or ((data[7].toInt() and 0xFF) shl 8)).toDouble() / 10.0
+                    val rotz = ((data[8].toInt() and 0xFF) or ((data[9].toInt() and 0xFF) shl 8)).toDouble() / 10.0
+
+                    runOnUiThread {
+                        val s = String.format("Euler : T : %d - (Yaw : %f, Ptich : %f, Roll : %f)", timeStamp, rotx, roty, rotz)
+                        //Log.w("BLUETOOTH DEBUG", s);
+                        mTextLine1!!.setText(s)
+                        mTextLine1!!.getRootView().postInvalidate()
+                    }
+                    //val controler = mActivityGLView!!.controller as GLViewController
+                    //controler.setQuaternion(0.0.toFloat(), rotx.toFloat(), roty.toFloat(), rotz.toFloat())
+                }
+                Neblina.NEBLINA_COMMAND_FUSION_QUATERNION_STREAM.toInt() -> {
+                    val q1 = (((data[4].toInt() and 0xFF) or ((data[5].toInt() and 0xFF) shl 8)).toShort()).toDouble() / 32768.0
+                    val q2 = (((data[6].toInt() and 0x00FF) or ((data[7].toInt() and 0x00FF) shl 8)).toShort()).toDouble() / 32768.0
+                    val q3 = (((data[8].toInt() and 0x00FF) or ((data[9].toInt() and 0x00FF) shl 8)).toShort()).toDouble() / 32768.0
+                    val q4 = (((data[10].toInt() and 0x00FF) or ((data[11].toInt() and 0x00FF) shl 8)).toShort()).toDouble() / 32768.0
+                    //val q1 = (data[4] as Short and 0xFF as Short) or (data[5] as Short and 0xFF shl 8)) / 32768.0
+                    runOnUiThread {
+
+                        val s = String.format("Quat: T : %d - (%.2f, %.2f, %.2f, %.2f)", timeStamp, q1, q2, q3, q4)
+                        mTextLine1!!.setText(s)
+                        mTextLine1!!.getRootView().postInvalidate()
+
+                        mCur3DObj?.setQuaternion(q1.toFloat(), q2.toFloat(), q3.toFloat(), q4.toFloat())
+                        //mShip?.setQuaternion(q1.toFloat(), q2.toFloat(), q3.toFloat(), q4.toFloat())
+                        //mCube?.setQuaternion(q1.toFloat(), q2.toFloat(), q3.toFloat(), q4.toFloat())
+                    }
+
+                    //ByteBuffer ar = ByteBuffer.wrap(data);
+
+                    //int ts = (data[0] & 0xFF) | ((data[1] & 0xFF) << 8) | ((data[2] & 0xFF) << 16) | ((data[3] & 0xFF) << 24);
+                    var dt: Long = 0
+                    if (timeStamp == mQuatTimeStamp) {
+                        mQuatBdCnt++
+                    }
+                    if (timeStamp > mQuatTimeStamp) {
+                        dt = timeStamp - mQuatTimeStamp
+                    } else {
+                        dt = -0x1.toLong() - mQuatTimeStamp + timeStamp
+                    }
+
+                    if (dt < 0) {
+                        dt = -dt
+                    }
+                    if (dt > mQuatPeriod + (mQuatPeriod shr 1) || dt < mQuatPeriod - (mQuatPeriod shr 1)) {
+                        mQuatDropCnt++
+                    }
+                    mQuatCnt++
+
+
+                    val finalDt = dt
+                    runOnUiThread {
+                        val s = String.format("%d, %d %d %d", finalDt, mQuatCnt, mQuatDropCnt, mQuatBdCnt)
+                        mTextLine2!!.setText(s)
+                        mTextLine2!!.getRootView().postInvalidate()
+
+                    }
+                    mQuatTimeStamp = timeStamp
+                }
+            }
+        }
+
+        override fun didReceivePmgntData(sender: NeblinaDevice?, respType: Int, cmdRspId: Int, data: ByteArray?, dataLen: Int, errFlag: Boolean) {
+            // TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        }
+
+        override fun didReceiveLedData(sender: NeblinaDevice?, respType: Int, cmdRspId: Int, data: ByteArray?, dataLen: Int, errFlag: Boolean) {
+            // TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        }
+
+        override fun didReceiveDebugData(sender: NeblinaDevice?, respType: Int, cmdRspId: Int, data: ByteArray?, dataLen: Int, errFlag: Boolean) {
+            /// TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        }
+
+        override fun didReceiveRecorderData(sender: NeblinaDevice?, respType: Int, cmdRspId: Int, data: ByteArray?, dataLen: Int, errFlag: Boolean) {
+            // TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        }
+
+        override fun didReceiveEepromData(sender: NeblinaDevice?, respType: Int, cmdRspId: Int, data: ByteArray?, dataLen: Int, errFlag: Boolean) {
+            // TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        }
+
+        override fun didReceiveSensorData(sender: NeblinaDevice?, respType: Int, cmdRspId: Int, data: ByteArray?, dataLen: Int, errFlag: Boolean) {
+            val timeStamp = data!![0].toLong() and 0xFF or (data[1].toLong() and 0xFF shl 8) or (data[2].toLong() and 0xFF shl 16) or (data[3].toLong() and 0xFF shl 24)
+            when (cmdRspId) {
+                Neblina.NEBLINA_COMMAND_SENSOR_ACCELEROMETER_STREAM.toInt() -> {
+                    val x = data[4].toInt() and 0xff or (data[5].toInt() shl 8)
+                    val y = data[6].toInt() and 0xff or (data[7].toInt() shl 8)
+                    val z = data[8].toInt() and 0xff or (data[9].toInt() shl 8)
+                    runOnUiThread {
+                        val s = String.format("Accel : %d - (%d, %d, %d)", timeStamp, x, y, z)
+                        //Log.w("BLUETOOTH DEBUG", s);
+                        mTextLine1!!.setText(s)
+                        mTextLine1!!.getRootView().postInvalidate()
+                    }
+                }
+                Neblina.NEBLINA_COMMAND_SENSOR_GYROSCOPE_STREAM.toInt() -> {
+                    val x = data[4].toInt() and 0xff or (data[5].toInt() shl 8)
+                    val y = data[6].toInt() and 0xff or (data[7].toInt() shl 8)
+                    val z = data[8].toInt() and 0xff or (data[9].toInt() shl 8)
+                    runOnUiThread {
+                        val s = String.format("Gyro : %d - (%d, %d, %d)", timeStamp, x, y, z)
+                        //Log.w("BLUETOOTH DEBUG", s);
+                        mTextLine1!!.setText(s)
+                        mTextLine1!!.getRootView().postInvalidate()
+                    }
+                }
+                Neblina.NEBLINA_COMMAND_SENSOR_HUMIDITY_STREAM.toInt() -> {
+                    val x = data[4].toInt() and 0xff or (data[5].toInt() shl 8) or (data[6].toInt() shl 16) or (data[7].toInt() shl 24)
+                    val xf = x.toFloat() / 100.0.toFloat()
+                    runOnUiThread {
+                        val s = String.format("Humidity : %f %", xf)
+                        //Log.w("BLUETOOTH DEBUG", s);
+                        mTextLine1!!.setText(s)
+                        mTextLine1!!.getRootView().postInvalidate()
+                    }
+                }
+                Neblina.NEBLINA_COMMAND_SENSOR_MAGNETOMETER_STREAM.toInt() -> {
+                    val x = (data[4].toInt() and 0xff) or ((data[5].toInt() and 0xFF) shl 8)
+                    val y = (data[6].toInt() and 0xff) or ((data[7].toInt() and 0xFF) shl 8)
+                    val z = (data[8].toInt() and 0xff) or ((data[9].toInt() and 0xFF) shl 8)
+                    runOnUiThread {
+                        val s = String.format("Mag : %d - (%d, %d, %d)", timeStamp, x, y, z)
+                        //Log.w("BLUETOOTH DEBUG", s);
+                        mTextLine1!!.setText(s)
+                        mTextLine1!!.getRootView().postInvalidate()
+                    }
+                }
+                Neblina.NEBLINA_COMMAND_SENSOR_PRESSURE_STREAM.toInt() -> {
+                }
+                Neblina.NEBLINA_COMMAND_SENSOR_TEMPERATURE_STREAM.toInt() -> {
+                    val x = data[4].toInt() and 0xff or (data[5].toInt() shl 8) or (data[6].toInt() shl 16) or (data[7].toInt() shl 24)
+                    val xf = x.toFloat() / 100.0.toFloat()
+                    runOnUiThread {
+                        val s = String.format("Temp : %f %", xf)
+                        //Log.w("BLUETOOTH DEBUG", s);
+                        mTextLine2!!.setText(s)
+                        mTextLine2!!.getRootView().postInvalidate()
+                    }
+                }
+                Neblina.NEBLINA_COMMAND_SENSOR_ACCELEROMETER_GYROSCOPE_STREAM.toInt() -> {
+                }
+                Neblina.NEBLINA_COMMAND_SENSOR_ACCELEROMETER_MAGNETOMETER_STREAM.toInt() -> {
+                }
+            }
+        }
+    }
 }

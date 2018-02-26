@@ -149,10 +149,10 @@ public class MainActivity extends AppCompatActivity {
                 case Neblina.NEBLINA_COMMAND_FUSION_QUATERNION_STREAM:
                     //int timeStamp = (int)data[0] | ((int)data[1] << 8) | ((int)data[2] << 16) | ((int)data[3] << 24);
                     long timeStamp = NeblinaUtilities.convertByteToUnsignedInt(data[0], data[1], data[2], data[3]);
-                    double q1 = NeblinaUtilities.convertByteToUnsignedShort(data[4], data[5]) / 32768.0;
-                    double q2 = NeblinaUtilities.convertByteToUnsignedShort(data[6], data[7]) / 32768.0;
-                    double q3 = NeblinaUtilities.convertByteToUnsignedShort(data[8], data[9]) / 32768.0;
-                    double q4 = NeblinaUtilities.convertByteToUnsignedShort(data[10], data[11]) / 32768.0;
+                    double q1 = NeblinaUtilities.convertByteToShort(data[4], data[5]) / 32768.0;
+                    double q2 = NeblinaUtilities.convertByteToShort(data[6], data[7]) / 32768.0;
+                    double q3 = NeblinaUtilities.convertByteToShort(data[8], data[9]) / 32768.0;
+                    double q4 = NeblinaUtilities.convertByteToShort(data[10], data[11]) / 32768.0;
 
                     final String s = String.format("T : %d - (%.3f, %.3f, %.3f, %.3f)", timeStamp, q1, q2, q3, q4);
                     Log.w("BLUETOOTH DEBUG", s);

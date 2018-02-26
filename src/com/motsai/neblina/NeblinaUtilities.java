@@ -30,12 +30,31 @@ public class NeblinaUtilities {
         return (byte)(p1 ? 1 : 0);
     }
 
-    static public short convertByteToUnsignedShort(byte p1, byte p2) {
-        return (short)((p1 & 0xFF) | ((p2 & 0xFF) << 8));
+    static public int convertByteToShort(byte p1, byte p2) {
+        return ((p1 & 0xFF) | ((p2 & 0xFF) << 8));
     }
 
-    static public int convertByteToUnsignedInt(byte p1, byte p2, byte p3, byte p4) {
+    static public short convertByteToUnsignedShot(byte p1, byte p2) {
+        return (short)convertByteToShort(p1, p2);
+    }
+
+    static public long convertByteToUnsignedInt(byte p1, byte p2, byte p3, byte p4) {
         return ((p1 & 0xFF) | ((p2 & 0xFF) << 8) | ((p3 & 0xFF) << 16) | ((p4 & 0xFF) << 24));
+    }
+
+    static public int getCommandFromPacket(byte[] packet) {
+        assert packet.length >= 4;
+        return packet[3];
+    }
+
+    static public int getSubSystemFromPacket(byte[] packet) {
+        assert packet.length >= 4;
+        return packet[0] & 0x1F;
+    }
+
+    static public int getPacketTypeFromPacket(byte[] packet) {
+        assert packet.length >= 4;
+        return packet[0] >> 5;
     }
 
 } // NeblinaUtilities class
