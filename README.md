@@ -1,32 +1,18 @@
-# Neblina&trade; Development Kit Android Java
+# Neblina&trade; SDK for Android
 =========  
 
-![ProMotion Board](docs/images/V2btop.png)  
-
-## Neblina&trade;
-The Neblina&trade; module is a low-power self-contained [AHRS](https://en.wikipedia.org/wiki/Attitude_and_heading_reference_system), [VRU](https://en.wikipedia.org/wiki/Inertial_measurement_unit) and [IMU](https://en.wikipedia.org/wiki/Inertial_measurement_unit) with [Bluetooth&reg; SMART](https://en.wikipedia.org/wiki/Bluetooth_low_energy) connectivity developed by Motsai. The miniature board built with the latest [HDI PCB](https://en.wikipedia.org/wiki/Microvia) technology, features a high-performance patent-pending sensor fusion algorithm on-board, that makes it perfect for [wearable technology devices](https://en.wikipedia.org/wiki/Wearable_technology) in applications such as [biomechanical analysis](https://en.wikipedia.org/wiki/Biomechanics), [sports performance analytics](https://en.wikipedia.org/wiki/Sports_biomechanics), remote [physical therapy](https://en.wikipedia.org/wiki/Physical_therapy) monitoring, [quantified self](https://en.wikipedia.org/wiki/Quantified_Self) , [health and fitness tracking](https://en.wikipedia.org/wiki/Activity_tracker), among others.
-
-## Neblina&trade; Development Kit
-
-![DK Board](docs/images/NeblinaDK_front_700.png)
-
-The [Neblina&trade; Development Kit](http://neblina.io/) serves as a reference design for Neblina integration, I/O expansion and an onboard Debug J-Tag for custom firmware development. The development kit with the extensive software support allows system integrators and evaluators to start development within minutes.
-
-This repository is part of the development kit that provides a Java interface to interact with the Neblina&trade;.
-
+You can find more advance information on Neblina&trade; module, Neblina&trade; Development Kit, Neblina&trade; SDK and API, [here](http://docs.motsai.com).
 
 ### Prerequisite
 
-* Have on hand a Neblina&trade; module or Development Kit
+* One or more Neblina&trade; module or Development Kit
 * An Android Phone or Tablet with Bluetooth LE capability.
 * Android 6.0 (Marshmallow) or above.
 * Clone or download this repo.
-* Android Studio 2.3 is required to compile
-* Android programming skills
+* Android Studio 2.3 or later
+* Android programming skills (Java and/or Kotlin)
 
 ### Functional check  
-
-Follow the hardware [Quick Start guide](http://nebdox.motsai.com/ProMotion_DevKit/Getting_Started) to make sure that the Neblina&trade; module or Development Kit is powered on and functional.
 
 Download or Clone this repo using the command
 
@@ -64,10 +50,3 @@ To enable Bluetooth support in the App.  Permission settings are required.  The 
 <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 ```
-
-
-#### API documentations
-
-http://nebdox.motsai.com
-
-# NOTE : This repository is still under heavy development.
