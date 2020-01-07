@@ -16,10 +16,20 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import android.renderscript.*
+import android.service.autofill.Dataset
+import com.github.mikephil.charting.charts.LineChart
+import com.github.mikephil.charting.data.LineData
+import com.jjoe64.graphview.GraphView
+import com.jjoe64.graphview.Viewport
+import com.jjoe64.graphview.series.DataPoint
+import com.jjoe64.graphview.series.LineGraphSeries
 import com.motsai.neblina.*
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.HashMap
+
+import android.opengl.*
+import android.opengl.GLSurfaceView
 
 import fr.arnaudguyon.smartgl.math.Vector3D
 import fr.arnaudguyon.smartgl.opengl.LightParallel
@@ -37,6 +47,8 @@ import fr.arnaudguyon.smartgl.opengl.Texture
 import fr.arnaudguyon.smartgl.touch.TouchHelperEvent
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlin.experimental.or
+import java.util.Scanner
+import javax.microedition.khronos.opengles.GL10
 
 class MainActivity : AppCompatActivity(), NeblinaDelegate, SmartGLViewController {
     private var mBluetoothAdapter: BluetoothAdapter? = null
@@ -63,6 +75,9 @@ class MainActivity : AppCompatActivity(), NeblinaDelegate, SmartGLViewController
     private var mSpaceFrigateTexture: Texture? = null
     private var mRenderPassShip: RenderPassObject3D? = null
     private var mRenderPassCube: RenderPassObject3D? = null
+    private var mGraphView: LineChart? = null
+    //private var mSeries: LineGraphSeries<DataPoint>? = null
+    private var mLineData: LineData? = null
 
     val cmdList = arrayOf(
             NebCmdItem(Neblina.NEBLINA_SUBSYSTEM_GENERAL, Neblina.NEBLINA_COMMAND_GENERAL_INTERFACE_STATE,
@@ -141,6 +156,65 @@ class MainActivity : AppCompatActivity(), NeblinaDelegate, SmartGLViewController
         mTextLine1 = findViewById<View>(R.id.textView1) as TextView
         mTextLine2 = findViewById<View>(R.id.textView2) as TextView
         mTextLine3 = findViewById<View>(R.id.textView3) as TextView
+        mGraphView = findViewById(R.id.graph) as LineChart
+
+/*
+        mSeries = LineGraphSeries<DataPoint>()
+        mGraphView!!.addSeries(mSeries);
+        mGraphView!!.getViewport().setYAxisBoundsManual(true)
+        mGraphView!!.getViewport().setMinY(-2.0)
+        mGraphView!!.getViewport().setMaxY(2.0)
+        mGraphView!!.getViewport().setScrollable(true)
+*/
+        //val inputStream = context.getResources().openRawResource(rawResId)
+        //val scanner = Scanner(glview.context.getAssets().open("res/raw/space_frigate_obj.txt"))
+        val scanner = Scanner(glview.context.getResources().openRawResource(R.raw.space_frigate_obj))
+        var vertices : ArrayList<Float> = ArrayList<Float>()
+        var faces : ArrayList<Short> = ArrayList<Short>()
+        var idx : Int = 0
+        while (scanner.hasNextLine()) {
+            val line = scanner.nextLine()
+            if (line.startsWith("v ")) {
+                // Add vertex line to list of vertices
+                //vertices.add(line)
+                val coords = line.split(" ") // Split by space
+                val x :Float = java.lang.Float.parseFloat(coords[1])
+                val y = java.lang.Float.parseFloat(coords[2])
+                val z = java.lang.Float.parseFloat(coords[3])
+
+                vertices.add (x)//[idx++] = x
+                vertices.add (y)
+                vertices.add (z)
+            } else if (line.startsWith("f ")) {
+                // Add face line to faces list
+                //facesList.add(line)
+                val vertexIndices = line.split(" ", "/");
+                for (i in 1..vertexIndices.size - 1 ) {
+                    val vertex = java.lang.Short.parseShort(vertexIndices[i]);
+                    faces.add((vertex - 1).toShort())
+                }
+             }
+        }
+
+// Close the scanner
+        scanner.close()
+
+        mSpaceFrigateTexture = Texture(glview.context, R.drawable.space_frigate_6_color)
+
+        var model = WavefrontModel.Builder(glview.context, R.raw.space_frigate_obj)
+                .addTexture("", mSpaceFrigateTexture)
+                .create();
+        mShip = model.toObject3D()
+        mShip?.setPos(0f, 0f, -10f);
+        mRenderPassShip?.addObject(mShip);
+
+        model = WavefrontModel.Builder(glview.context, R.raw.calibration_cube_obj)
+                .create();
+        mCube = model.toObject3D()
+        mCube?.setPos(0f, 0f, -10f)
+        mRenderPassCube?.addObject(mCube)
+
+        mCur3DObj = mShip;
 
         val sw3dv = findViewById<Switch>(R.id.switch_3dview) as Switch
         sw3dv.isChecked = false
@@ -552,11 +626,16 @@ class MainActivity : AppCompatActivity(), NeblinaDelegate, SmartGLViewController
                 //val q1 = (data[4] as Short and 0xFF as Short) or (data[5] as Short and 0xFF shl 8)) / 32768.0
                 runOnUiThread {
 
-                    val s = String.format("Quat: T : %d - (%.2f, %.2f, %.2f, %.2f)", timeStamp, q1, q2, q3, q4)
+                    val s = String.format("Quat: T : %d - (%.2f, %.2f, %.2f, %.2f)", timeStamp, q1, q2, -q4, q3)
                     mTextLine1!!.setText(s)
                     mTextLine1!!.getRootView().postInvalidate()
 
-                    mCur3DObj?.setQuaternion(q1.toFloat(), q2.toFloat(), q3.toFloat(), q4.toFloat())
+                    mCur3DObj?.setQuaternion(q1.toFloat(), q2.toFloat(), -q4.toFloat(), q3.toFloat())
+
+
+
+                    //mSeries!!.appendData(DataPoint(timeStamp.toDouble(), q2), true, 20)
+                   // mGraphView!!.postInvalidate()
                     //mShip?.setQuaternion(q1.toFloat(), q2.toFloat(), q3.toFloat(), q4.toFloat())
                     //mCube?.setQuaternion(q1.toFloat(), q2.toFloat(), q3.toFloat(), q4.toFloat())
                 }
@@ -564,7 +643,7 @@ class MainActivity : AppCompatActivity(), NeblinaDelegate, SmartGLViewController
                 //ByteBuffer ar = ByteBuffer.wrap(data);
 
                 //int ts = (data[0] & 0xFF) | ((data[1] & 0xFF) << 8) | ((data[2] & 0xFF) << 16) | ((data[3] & 0xFF) << 24);
-                var dt: Long = 0
+                var dt: Long
                 if (timeStamp == mQuatTimeStamp) {
                     mQuatBdCnt++
                 }
@@ -736,4 +815,36 @@ class MainActivity : AppCompatActivity(), NeblinaDelegate, SmartGLViewController
     }
 
     public override fun onTouchEvent(smartGLView:SmartGLView, event:TouchHelperEvent) {}
+/*
+    class MyGLSurfaceView(context: Context) : GLSurfaceView(context) {
+
+        private val mRenderer: MyGLRenderer
+
+        init {
+
+            // Create an OpenGL ES 2.0 context
+            setEGLContextClientVersion(2)
+
+            mRenderer = MyGLRenderer()
+
+            // Set the Renderer for drawing on the GLSurfaceView
+            setRenderer(mRenderer)
+        }
+    }
+    class MyGLRenderer : GLSurfaceView.Renderer {
+
+        override fun onSurfaceCreated(GL10 gl, EGLConfig config) {
+            // Set the background frame color
+            GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
+        }
+
+        override fun onDrawFrame(unused: GL10) {
+            // Redraw background color
+            GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
+        }
+
+        override fun onSurfaceChanged(unused: GL10, width: Int, height: Int) {
+            GLES20.glViewport(0, 0, width, height)
+        }
+    }*/
 }
